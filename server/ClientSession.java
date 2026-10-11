@@ -37,8 +37,6 @@ import com.threerings.projectx.dungeon.data.RotatingGateSummary;
 import com.threerings.projectx.dungeon.data.Status;
 import com.threerings.projectx.dungeon.data.Theme;
 import com.threerings.projectx.dungeon.data.actor.Dungeoneer;
-import com.threerings.projectx.dungeon.config.AttackConfig;
-import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.projectx.item.data.LevelItem;
 import com.threerings.projectx.mission.data.RankPair;
 import com.threerings.projectx.town.data.TownSummary;
@@ -49,6 +47,7 @@ import com.threerings.tudey.data.TudeySceneModel;
 import com.threerings.tudey.data.InputEnqueueEvent;
 import com.threerings.tudey.data.InputFrame;
 import com.threerings.tudey.data.actor.Actor;
+import com.threerings.tudey.data.actor.Active;
 import com.threerings.projectx.data.actor.Knight;
 import com.threerings.tudey.dobj.ActorDelta;
 import com.threerings.tudey.dobj.SceneDeltaEvent;
@@ -101,7 +100,8 @@ public class ClientSession implements Runnable {
     private long previousAckLagMs;
     private boolean inputStreamLogged;
     private Knight authoritativeActor;
-    private final Map<Integer, Knight> lastSentActors = new LinkedHashMap<>();
+    private final Map<Integer, Actor> lastSentActors = new LinkedHashMap<>();
+    private VanillaCombatController vanillaCombat;
     private int lastInputTimestamp = Integer.MIN_VALUE;
     private int lastAcknowledgedInputTimestamp;
     private int lastActorStateTimestamp;
@@ -115,19 +115,6 @@ public class ClientSession implements Runnable {
     private int timingOnlyTicks;
     private boolean inputTimelineSynchronized;
     private boolean portalTransitionPending;
-    private int activeWeaponIndex;
-    private int attackChainIndex;
-    private int attackPressedAt = Integer.MIN_VALUE;
-    private int attackActivityEndsAt = Integer.MIN_VALUE;
-    private int nextAttackAt = Integer.MIN_VALUE;
-    private int chainResetsAt = Integer.MIN_VALUE;
-    private int nextDodgeAt = Integer.MIN_VALUE;
-    private int lastActionChanged = Integer.MIN_VALUE;
-    private boolean attackHeld;
-    private boolean defendHeld;
-    private boolean dodgeHeld;
-    private boolean shieldBashHeld;
-    private boolean charging;
     private volatile boolean sceneReady;
     private Thread writerThread;
 
@@ -777,7 +764,7 @@ public class ClientSession implements Runnable {
         this.authoritativeActor = playerActor;
         resetCombatState();
         this.sceneNetwork.join(this.currentSceneId, this);
-        Map<Integer, Knight> actors = this.sceneNetwork.snapshotActors(this.currentSceneId);
+        Map<Integer, Actor> actors = this.sceneNetwork.snapshotActors(this.currentSceneId);
         if (!actors.containsKey(playerActor.vw())) {
             actors.put(playerActor.vw(), (Knight)playerActor.copy(null));
         }
@@ -874,8 +861,7 @@ public class ClientSession implements Runnable {
                 && this.authoritativeActor instanceof Dungeoneer) {
             // Combat activities expire on the authoritative scene clock even
             // while the player is standing still and sends no new frames.
-            finishExpiredCombatActivity(
-                (Dungeoneer)this.authoritativeActor, targetSceneTimestamp);
+            if (this.vanillaCombat != null) this.vanillaCombat.tick(targetSceneTimestamp);
         }
 
         for (int index = firstFrameIndex; index < orderedFrames.length; index++) {
@@ -918,22 +904,33 @@ public class ClientSession implements Runnable {
                     Math.min((long)targetSceneTimestamp, translated));
             }
 
-            this.authoritativeActor.ah(frame.tA());
-            this.authoritativeActor.aP(frame.adz());
+            boolean combatFrame = this.currentSceneId == SceneManager.TRAINING_SCENE_ID
+                && this.authoritativeActor instanceof Dungeoneer && frame instanceof DungeonInputFrame;
+            if (!combatFrame) {
+                this.authoritativeActor.ah(frame.tA());
+                this.authoritativeActor.aP(frame.adz());
+            }
             if (this.authoritativeActor.adU() == 1) {
                 // Activity 1 is the creation animation. The normal state is
                 // activity 0; idle/walk selection then follows actor flag 2.
                 this.authoritativeActor.aU(0, frameSceneTimestamp);
             }
-            if (this.currentSceneId == SceneManager.TRAINING_SCENE_ID
-                    && this.authoritativeActor instanceof Dungeoneer
-                    && frame instanceof DungeonInputFrame) {
-                processCombatFrame((DungeonInputFrame)frame, frameSceneTimestamp);
+            if (combatFrame) {
+                Dungeoneer pawn = (Dungeoneer)this.authoritativeActor;
+                if (this.vanillaCombat == null) this.vanillaCombat = new VanillaCombatController(
+                    this.sceneMgr,this.playerObject,pawn,frameSceneTimestamp-1);
+                DungeonInputFrame dungeon = (DungeonInputFrame)frame;
+                int actionTimestamp = (int)Math.max(Integer.MIN_VALUE,(long)frameSceneTimestamp
+                    - Math.max(0L,(long)frameTimestamp-dungeon.Nh()));
+                int flags = this.movementConfig.enabled ? frame.getFlags() : frame.getFlags() & ~1;
+                this.vanillaCombat.input(new DungeonInputFrame(
+                    frameSceneTimestamp,frame.tA(),frame.adz(),flags,actionTimestamp));
+                clampCombatPosition();
             }
 
             boolean moving = this.movementConfig.enabled && frame.bR(1);
-            this.authoritativeActor.k(2, moving);
-            if (moving && elapsedMs > 0) {
+            if (!combatFrame) this.authoritativeActor.k(2, moving);
+            if (!combatFrame && moving && elapsedMs > 0) {
                 float distance = this.movementConfig.effectiveSpeed() * elapsedMs / 1000.0f;
                 float x = this.authoritativeActor.tz().x
                     + distance * (float)Math.cos(frame.adz());
@@ -983,162 +980,13 @@ public class ClientSession implements Runnable {
                 + " moving=" + ((latestInputFlags & 1) != 0)
                 + " action=" + ((latestInputFlags & 4) != 0)
                 + " weapon=" + (this.currentSceneId == SceneManager.TRAINING_SCENE_ID
-                    ? this.activeWeaponIndex + 1 : 0)
+                    ? (this.vanillaCombat==null?1:this.vanillaCombat.weaponIndex()+1) : 0)
                 + " activity=" + this.authoritativeActor.adU()
                 + " position=(" + this.authoritativeActor.tz().x
                 + "," + this.authoritativeActor.tz().y + ")"
                 + " rotation=" + this.authoritativeActor.tA()
                 + " direction=" + this.authoritativeActor.adz());
         }
-    }
-
-    private void processCombatFrame(DungeonInputFrame frame, int timestamp) {
-        Dungeoneer actor = (Dungeoneer)this.authoritativeActor;
-        finishExpiredCombatActivity(actor, timestamp);
-
-        int requestedWeapon = frame.Qv();
-        if (requestedWeapon >= 0 && requestedWeapon < this.playerObject.weaponSlots
-                && requestedWeapon != this.activeWeaponIndex) {
-            this.activeWeaponIndex = requestedWeapon;
-            this.attackChainIndex = 0;
-            this.chainResetsAt = Integer.MIN_VALUE;
-            this.attackActivityEndsAt = Integer.MIN_VALUE;
-            this.nextAttackAt = timestamp;
-            this.attackPressedAt = Integer.MIN_VALUE;
-            this.charging = false;
-            this.sceneMgr.equipCombatWeapon(actor, this.playerObject, requestedWeapon);
-            actor.aU(0, timestamp);
-            logCombat("weapon", timestamp, "slot=" + (requestedWeapon + 1)
-                + " item=" + currentWeaponName(actor));
-        }
-
-        boolean dodge = frame.bR(1024);
-        boolean shieldBash = frame.bR(2048);
-        boolean defend = frame.bR(64);
-        boolean attack = frame.bR(4);
-        int actionChanged = frame.Nh();
-        boolean actionChangedNow = actionChanged != this.lastActionChanged;
-
-        if (dodge && !this.dodgeHeld && timestamp >= this.nextDodgeAt) {
-            startFixedActivity(actor, 286, timestamp, 625);
-            this.nextDodgeAt = timestamp + 8_000;
-            logCombat("dodge", timestamp, "cooldownUntil=" + this.nextDodgeAt);
-        } else if (shieldBash && !this.shieldBashHeld) {
-            startFixedActivity(actor, 287, timestamp, 700);
-            logCombat("shield_bash", timestamp, "shield=" + actor.Rk());
-        } else if (defend && !isAttackActivity(actor.adU())) {
-            if (!this.defendHeld || actor.adU() != 284) {
-                actor.aU(284, timestamp);
-                this.attackActivityEndsAt = Integer.MAX_VALUE;
-                logCombat("defend", timestamp, "state=raised");
-            }
-        } else if (!defend && this.defendHeld && actor.adU() == 284) {
-            actor.aU(0, timestamp);
-            this.attackActivityEndsAt = Integer.MIN_VALUE;
-            logCombat("defend", timestamp, "state=lowered");
-        }
-
-        if (attack) {
-            if (!this.attackHeld) {
-                this.attackPressedAt = timestamp;
-            }
-            if ((!this.attackHeld || actionChangedNow) && timestamp >= this.nextAttackAt) {
-                startPrimaryAttack(actor, timestamp);
-            } else if (!this.charging && supportsCharge(actor)
-                    && timestamp - this.attackPressedAt >= 350
-                    && timestamp >= this.nextAttackAt) {
-                this.charging = true;
-                actor.aU(283, timestamp);
-                this.attackActivityEndsAt = Integer.MAX_VALUE;
-                logCombat("charge", timestamp, "state=charging item=" + currentWeaponName(actor));
-            }
-        } else if (this.attackHeld && this.charging) {
-            finishChargedAttack(actor, timestamp);
-        }
-
-        this.lastActionChanged = actionChanged;
-        this.attackHeld = attack;
-        this.defendHeld = defend;
-        this.dodgeHeld = dodge;
-        this.shieldBashHeld = shieldBash;
-    }
-
-    private void startPrimaryAttack(Dungeoneer actor, int timestamp) {
-        ItemConfig.Weapon weapon = actor.Rj();
-        int attackCount = weapon == null || weapon.attacks == null ? 0 : weapon.attacks.length;
-        if (attackCount == 0) {
-            this.charging = true;
-            this.attackPressedAt = timestamp;
-            actor.aU(283, timestamp);
-            this.attackActivityEndsAt = Integer.MAX_VALUE;
-            logCombat("charge", timestamp, "state=charging item=" + currentWeaponName(actor));
-            return;
-        }
-        if (timestamp >= this.chainResetsAt) {
-            this.attackChainIndex = 0;
-        }
-        int chain = this.attackChainIndex % Math.min(attackCount, 8);
-        AttackConfig.Original attack = this.sceneMgr.resolveAttack(weapon, chain);
-        int rearm = attack == null ? 350 : Math.max(100, attack.Qg());
-        int duration = attack == null ? 750 : Math.max(rearm, attack.Qf());
-        actor.aU(292 + chain, timestamp);
-        this.attackActivityEndsAt = timestamp + duration;
-        this.nextAttackAt = timestamp + rearm;
-        this.chainResetsAt = this.attackActivityEndsAt
-            + (weapon == null ? 0 : weapon.chainCooldown);
-        this.attackChainIndex = (chain + 1) % attackCount;
-        actor.aw(this.attackChainIndex, this.chainResetsAt);
-        logCombat("attack", timestamp,
-            "activity=" + (292 + chain)
-            + " chain=" + (chain + 1) + "/" + attackCount
-            + " rearm=" + rearm + "ms duration=" + duration + "ms"
-            + " item=" + currentWeaponName(actor));
-    }
-
-    private void finishChargedAttack(Dungeoneer actor, int timestamp) {
-        ItemConfig.Weapon weapon = actor.Rj();
-        int heldFor = Math.max(0, timestamp - this.attackPressedAt);
-        boolean complete = weapon != null && heldFor >= weapon.chargeTime;
-        actor.aU(complete ? 290 : 289, timestamp);
-        this.charging = false;
-        this.attackActivityEndsAt = timestamp + 900;
-        this.nextAttackAt = this.attackActivityEndsAt;
-        this.attackChainIndex = 0;
-        logCombat("charge", timestamp,
-            "state=" + (complete ? "released" : "incomplete")
-            + " held=" + heldFor + "ms activity=" + actor.adU()
-            + " item=" + currentWeaponName(actor));
-    }
-
-    private void startFixedActivity(
-            Dungeoneer actor, int activity, int timestamp, int duration) {
-        actor.aU(activity, timestamp);
-        this.attackActivityEndsAt = timestamp + duration;
-        this.nextAttackAt = this.attackActivityEndsAt;
-        this.charging = false;
-    }
-
-    private void finishExpiredCombatActivity(Dungeoneer actor, int timestamp) {
-        if (this.attackActivityEndsAt != Integer.MIN_VALUE
-                && this.attackActivityEndsAt != Integer.MAX_VALUE
-                && timestamp >= this.attackActivityEndsAt
-                && (isAttackActivity(actor.adU()) || actor.adU() == 286
-                    || actor.adU() == 287)) {
-            actor.aU(this.defendHeld ? 284 : 0, this.attackActivityEndsAt);
-            this.attackActivityEndsAt = this.defendHeld
-                ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-        }
-    }
-
-    private static boolean isAttackActivity(int activity) {
-        return activity == 283 || activity == 289 || activity == 290
-            || activity >= 292 && activity <= 299;
-    }
-
-    private static boolean supportsCharge(Dungeoneer actor) {
-        ItemConfig.Weapon weapon = actor.Rj();
-        return weapon != null && weapon.chargedAttack != null
-            && weapon.incompleteChargedAttack != null;
     }
 
     private static String currentWeaponName(Dungeoneer actor) {
@@ -1170,28 +1018,19 @@ public class ClientSession implements Runnable {
             + " batchedInputPackets=" + batchedInputPackets);
     }
 
-    private void logCombat(String action, int timestamp, String details) {
-        System.out.println("[ClientSession-" + connectionId + "][COMBAT] " + action
-            + " scene=" + this.currentSceneId + " timestamp=" + timestamp
-            + " " + details);
-    }
-
     private void resetCombatState() {
-        this.activeWeaponIndex = 0;
-        this.attackChainIndex = 0;
-        this.attackPressedAt = Integer.MIN_VALUE;
-        this.attackActivityEndsAt = Integer.MIN_VALUE;
-        this.nextAttackAt = Integer.MIN_VALUE;
-        this.chainResetsAt = Integer.MIN_VALUE;
-        this.nextDodgeAt = Integer.MIN_VALUE;
-        this.lastActionChanged = Integer.MIN_VALUE;
-        this.attackHeld = false;
-        this.defendHeld = false;
-        this.dodgeHeld = false;
-        this.shieldBashHeld = false;
-        this.charging = false;
+        this.vanillaCombat = null;
     }
 
+    private void clampCombatPosition() {
+        if (!this.movementConfig.clampToMapBounds) return;
+        float x=clamp(this.authoritativeActor.tz().x,this.movementConfig.minX,this.movementConfig.maxX);
+        float y=clamp(this.authoritativeActor.tz().y,this.movementConfig.minY,this.movementConfig.maxY);
+        if (x!=this.authoritativeActor.tz().x || y!=this.authoritativeActor.tz().y) {
+            this.authoritativeActor.tz().s(x,y);
+            this.authoritativeActor.setDirty(true);
+        }
+    }
     synchronized Knight snapshotActorForTick(int sceneId, int timestamp) {
         TickSnapshot snapshot = snapshotForTick(sceneId, timestamp);
         return snapshot == null ? null : snapshot.actor;
@@ -1213,14 +1052,16 @@ public class ClientSession implements Runnable {
         }
         if (sceneId == SceneManager.TRAINING_SCENE_ID
                 && this.authoritativeActor instanceof Dungeoneer) {
-            finishExpiredCombatActivity(
-                (Dungeoneer)this.authoritativeActor, timestamp);
+            if (this.vanillaCombat != null) {
+                this.vanillaCombat.tick(timestamp);
+                clampCombatPosition();
+            }
         }
         return new TickSnapshot((Knight)this.authoritativeActor.copy(null), this.lastInputTimestamp);
     }
 
     synchronized void publishSceneTick(
-            int sceneId, int timestamp, Map<Integer, Knight> actors, int capturedInputTimestamp)
+            int sceneId, int timestamp, Map<Integer, ? extends Actor> actors, int capturedInputTimestamp)
             throws IOException {
         if (!this.running || !this.sceneReady || this.currentSceneId != sceneId
                 || timestamp <= this.sceneTimestamp) {
@@ -1239,7 +1080,7 @@ public class ClientSession implements Runnable {
         boolean periodicState = (long)deliveryTimestamp - this.lastActorStateTimestamp
             >= this.movementConfig.actorStateIntervalMs;
         boolean deliverActorState = immediateState || periodicState;
-        Map<Integer, Knight> deliveryActors = new LinkedHashMap<>();
+        Map<Integer, Actor> deliveryActors = new LinkedHashMap<>();
         if (deliverActorState) {
             deliveryActors.putAll(prepareActorsForDelivery(actors, deliveryTimestamp));
         } else {
@@ -1249,9 +1090,9 @@ public class ClientSession implements Runnable {
         List<ActorDelta> updated = new ArrayList<>();
         List<Integer> removed = new ArrayList<>();
 
-        for (Map.Entry<Integer, Knight> entry : deliveryActors.entrySet()) {
-            Knight current = entry.getValue();
-            Knight previous = this.lastSentActors.get(entry.getKey());
+        for (Map.Entry<Integer, Actor> entry : deliveryActors.entrySet()) {
+            Actor current = entry.getValue();
+            Actor previous = this.lastSentActors.get(entry.getKey());
             if (previous == null) {
                 added.add((Actor)current.copy(null));
             } else if (!previous.equals(current)) {
@@ -1337,7 +1178,7 @@ public class ClientSession implements Runnable {
         this.previousAckLagMs = ackLagMs;
 
         Knight previousOwnActor = this.authoritativeActor == null
-            ? null : this.lastSentActors.get(this.authoritativeActor.vw());
+            ? null : (Knight)this.lastSentActors.get(this.authoritativeActor.vw());
         if (deliverActorState && previousOwnActor != null) {
             logDeliveredCombatState(
                 previousOwnActor, reference, acknowledgedInputTimestamp,
@@ -1369,9 +1210,9 @@ public class ClientSession implements Runnable {
     }
 
     private static void copyActors(
-            Map<Integer, Knight> source, Map<Integer, Knight> destination) {
-        for (Map.Entry<Integer, Knight> entry : source.entrySet()) {
-            destination.put(entry.getKey(), (Knight)entry.getValue().copy(null));
+            Map<Integer, ? extends Actor> source, Map<Integer, Actor> destination) {
+        for (Map.Entry<Integer, ? extends Actor> entry : source.entrySet()) {
+            destination.put(entry.getKey(), (Actor)entry.getValue().copy(null));
         }
     }
 
@@ -1380,17 +1221,18 @@ public class ClientSession implements Runnable {
      * scene tick. Pure transform reconciliation may wait for the configured
      * snapshot boundary while the local pawn prediction stays smooth.
      */
-    private boolean hasImmediateActorChange(Map<Integer, Knight> actors) {
+    private boolean hasImmediateActorChange(Map<Integer, ? extends Actor> actors) {
         if (!this.lastSentActors.keySet().equals(actors.keySet())) {
             return true;
         }
-        for (Map.Entry<Integer, Knight> entry : actors.entrySet()) {
-            Knight previous = this.lastSentActors.get(entry.getKey());
-            Knight current = entry.getValue();
+        for (Map.Entry<Integer, ? extends Actor> entry : actors.entrySet()) {
+            Actor previous = this.lastSentActors.get(entry.getKey());
+            Actor current = entry.getValue();
             if (previous == null
                     || previous.getClass() != current.getClass()
-                    || previous.adU() != current.adU()
-                    || previous.adV() != current.adV()
+                    || (previous instanceof Active && current instanceof Active
+                        && (((Active)previous).adU() != ((Active)current).adU()
+                            || ((Active)previous).adV() != ((Active)current).adV()))
                     || previous.bR(2) != current.bR(2)
                     || !Objects.equals(previous.Mv(), current.Mv())) {
                 return true;
@@ -1411,20 +1253,21 @@ public class ClientSession implements Runnable {
      * stamped several seconds in the future merely because another client (or
      * the global scene) advanced while this recipient was loading.
      */
-    private Map<Integer, Knight> prepareActorsForDelivery(
-            Map<Integer, Knight> actors, int deliveryTimestamp) {
-        Map<Integer, Knight> prepared = new LinkedHashMap<>();
-        for (Map.Entry<Integer, Knight> entry : actors.entrySet()) {
-            Knight current = entry.getValue();
-            Knight adjusted = (Knight)current.copy(null);
-            Knight previous = this.lastSentActors.get(entry.getKey());
+    private Map<Integer, Actor> prepareActorsForDelivery(
+            Map<Integer, ? extends Actor> actors, int deliveryTimestamp) {
+        Map<Integer, Actor> prepared = new LinkedHashMap<>();
+        for (Map.Entry<Integer, ? extends Actor> entry : actors.entrySet()) {
+            Actor current = entry.getValue();
+            Actor adjusted = (Actor)current.copy(null);
+            Actor previous = this.lastSentActors.get(entry.getKey());
 
-            if (adjusted.adV() > deliveryTimestamp) {
+            if (adjusted instanceof Active && ((Active)adjusted).adV() > deliveryTimestamp) {
+                Active active = (Active)adjusted;
                 int activityStarted = deliveryTimestamp;
-                if (previous != null && previous.adU() == adjusted.adU()) {
-                    activityStarted = Math.min(previous.adV(), deliveryTimestamp);
+                if (previous instanceof Active && ((Active)previous).adU() == active.adU()) {
+                    activityStarted = Math.min(((Active)previous).adV(), deliveryTimestamp);
                 }
-                adjusted.aU(adjusted.adU(), activityStarted);
+                active.aU(active.adU(), activityStarted);
             }
             if (actorCreatedField != null && adjusted.adX() > deliveryTimestamp) {
                 try {

@@ -41,7 +41,8 @@ public class SpiralServer {
         this.movementConfig = MovementConfig.load();
         this.sceneNetwork = new SceneNetworkManager(
             this.movementConfig.deltaIntervalMs,
-            this.movementConfig.trainingDeltaIntervalMs);
+            this.movementConfig.trainingDeltaIntervalMs,
+            this.sceneMgr.getCombatWorld());
     }
 
     public void start() throws IOException {
@@ -64,7 +65,7 @@ public class SpiralServer {
         System.out.println(" Sala de Pruebas: OID " + SceneManager.SCENE_OID + " (Haven / Level Scene)");
         System.out.println(" Training Hall: OID " + SceneManager.TRAINING_PLACE_OID
             + " (Scene " + SceneManager.TRAINING_SCENE_ID + " / Advanced Training)");
-        System.out.println(" Combate: Dungeoneer + armas/ataques/carga/defensa/esquiva habilitados");
+        System.out.println(" Combate: cubos originales + dano de espada/proyectil/bomba; paridad incompleta");
         System.out.println(" Movimiento: " + this.movementConfig.describe());
         System.out.println(" Inventario: Armas 5 Estrellas (Leviathan, Combuster, Polaris, etc.)");
         System.out.println(" Estado: LISTO PARA CONEXIONES");

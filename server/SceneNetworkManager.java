@@ -10,6 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import com.threerings.projectx.data.actor.Knight;
+import com.threerings.tudey.data.actor.Actor;
 
 /**
  * Fixed-rate authoritative scene clocks and participant broadcaster.
@@ -22,8 +23,14 @@ public final class SceneNetworkManager implements AutoCloseable {
     private final Map<Integer, SceneChannel> scenes = new LinkedHashMap<>();
     private final ScheduledExecutorService ticker;
     private volatile boolean running;
+    private final CombatWorld combatWorld;
 
     public SceneNetworkManager(int havenIntervalMs, int trainingIntervalMs) {
+        this(havenIntervalMs,trainingIntervalMs,null);
+    }
+
+    public SceneNetworkManager(int havenIntervalMs, int trainingIntervalMs, CombatWorld combatWorld) {
+        this.combatWorld = combatWorld;
         this.schedulerIntervalMs = havenIntervalMs;
         this.scenes.put(SceneManager.DEFAULT_SCENE_ID,
             new SceneChannel(SceneManager.DEFAULT_SCENE_ID, havenIntervalMs));
@@ -98,7 +105,7 @@ public final class SceneNetworkManager implements AutoCloseable {
         }
     }
 
-    public Map<Integer, Knight> snapshotActors(int sceneId) {
+    public Map<Integer, Actor> snapshotActors(int sceneId) {
         SceneChannel scene = requireScene(sceneId);
         List<ClientSession> participants;
         int timestamp;
@@ -106,7 +113,11 @@ public final class SceneNetworkManager implements AutoCloseable {
             participants = new ArrayList<>(scene.participants);
             timestamp = scene.timestamp;
         }
-        return snapshotActors(sceneId, timestamp, participants);
+        Map<Integer,Actor> actors = snapshotActors(sceneId, timestamp, participants);
+        if (sceneId == SceneManager.TRAINING_SCENE_ID && this.combatWorld != null) {
+            actors.putAll(this.combatWorld.snapshot(timestamp));
+        }
+        return actors;
     }
 
     public int participantCount(int sceneId) {
@@ -193,7 +204,7 @@ public final class SceneNetworkManager implements AutoCloseable {
             System.out.println(metrics);
         }
 
-        Map<Integer, Knight> actors = new LinkedHashMap<>();
+        Map<Integer, Actor> actors = new LinkedHashMap<>();
         Map<ClientSession, Integer> inputTimestamps = new LinkedHashMap<>();
         for (ClientSession session : participants) {
             ClientSession.TickSnapshot snapshot = session.snapshotForTick(scene.sceneId, timestamp);
@@ -201,6 +212,9 @@ public final class SceneNetworkManager implements AutoCloseable {
                 actors.put(snapshot.actor.vw(), snapshot.actor);
                 inputTimestamps.put(session, snapshot.inputTimestamp);
             }
+        }
+        if (scene.sceneId == SceneManager.TRAINING_SCENE_ID && this.combatWorld != null) {
+            actors.putAll(this.combatWorld.step(timestamp,actors));
         }
         for (ClientSession session : participants) {
             try {
@@ -216,9 +230,9 @@ public final class SceneNetworkManager implements AutoCloseable {
         }
     }
 
-    private static Map<Integer, Knight> snapshotActors(
+    private static Map<Integer, Actor> snapshotActors(
             int sceneId, int timestamp, List<ClientSession> participants) {
-        Map<Integer, Knight> actors = new LinkedHashMap<>();
+        Map<Integer, Actor> actors = new LinkedHashMap<>();
         for (ClientSession session : participants) {
             Knight actor = session.snapshotActorForTick(sceneId, timestamp);
             if (actor != null) {

@@ -22,6 +22,10 @@ import com.threerings.projectx.data.ProjectXSceneMarshaller;
 import com.threerings.projectx.data.ProjectXOccupantInfo;
 import com.threerings.projectx.data.actor.Knight;
 import com.threerings.projectx.dungeon.config.AttackConfig;
+import com.threerings.projectx.dungeon.config.FireActionConfig;
+import com.threerings.projectx.dungeon.config.DepthScaleConfig;
+import com.threerings.projectx.item.config.LevelTableConfig;
+import com.threerings.projectx.item.config.ItemPropertyConfig;
 import com.threerings.projectx.dungeon.data.TrainingSceneConfig;
 import com.threerings.projectx.dungeon.data.actor.Dungeoneer;
 import com.threerings.projectx.item.config.ItemConfig;
@@ -67,6 +71,7 @@ public class SceneManager {
     private final InstalledConfigManager configManager;
     private TudeySceneModel havenSceneModel;
     private TudeySceneModel trainingSceneModel;
+    private final CombatWorld combatWorld;
     private static Field bodyOidField;
 
     static {
@@ -136,6 +141,7 @@ public class SceneManager {
             System.err.println("[SceneManager] Failed to load Training Hall: " + e.getMessage());
         }
         this.trainingConfig = resolvedTrainingConfig;
+        this.combatWorld = new CombatWorld(this.configManager, this.trainingSceneModel);
 
         dobjMgr.register(this.sceneObject);
         dobjMgr.register(this.trainingSceneObject);
@@ -348,6 +354,11 @@ public class SceneManager {
             int actors = manager.loadGroup(ActorConfig.class, "rsrc/config/actor.dat");
             int items = manager.loadGroup(ItemConfig.class, "rsrc/config/item.dat");
             int attacks = manager.loadGroup(AttackConfig.class, "rsrc/config/attack.dat");
+            manager.loadGroup(FireActionConfig.class, "rsrc/config/fire_action.dat");
+            manager.loadGroup(DepthScaleConfig.class, "rsrc/config/depth_scale.dat");
+            manager.loadGroup(LevelTableConfig.class, "rsrc/config/level_table.dat");
+            manager.loadGroup(ItemPropertyConfig.class, "rsrc/config/item_property.dat");
+            manager.loadGroup(com.threerings.projectx.config.EmoteConfig.class, "rsrc/config/emote.dat");
             System.out.println("[SceneManager] Loaded installed combat configs: actors="
                 + actors + " items=" + items + " attacks=" + attacks);
         } catch (Exception e) {
@@ -358,6 +369,10 @@ public class SceneManager {
 
     public InstalledConfigManager getConfigManager() {
         return this.configManager;
+    }
+
+    public CombatWorld getCombatWorld() {
+        return this.combatWorld;
     }
 
     public LevelItem getEquippedWeapon(PlayerObject player, int weaponIndex) {

@@ -7,6 +7,18 @@ import com.threerings.config.ConfigManager;
 import com.threerings.config.DerivedConfig;
 import com.threerings.config.ManagedConfig;
 import com.threerings.export.BinaryImporter;
+import com.threerings.config.Parameter;
+import com.threerings.config.ParameterizedConfig;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import com.threerings.tudey.config.RegionConfig;
+import com.threerings.tudey.config.ActorConfig;
+import com.threerings.tudey.config.ActionConfig;
+import com.threerings.tudey.config.HandlerConfig;
+import com.threerings.tudey.config.TargetConfig;
+import com.threerings.tudey.shape.config.ShapeConfig;
 
 /** In-memory view of the game's installed binary configuration catalog. */
 public final class InstalledConfigManager extends ConfigManager {
@@ -36,8 +48,89 @@ public final class InstalledConfigManager extends ConfigManager {
                 throw new IllegalArgumentException("Unexpected config type in " + path
                     + ": " + (config == null ? "null" : config.getClass().getName()));
             }
+            restoreRegionContainers(config);
             group.a(config, false);
         }
         return configs.length;
+    }
+
+    private static void restoreRegionContainers(ManagedConfig config) throws Exception {
+        if (!(config instanceof ParameterizedConfig)) return;
+        // A few frozen server-action templates import a Default region despite
+        // exporting parameter paths for a concrete shape. Reconstruct only the
+        // container explicitly specified by those paths, before native binding.
+        List<Parameter.Direct> directs=new ArrayList<>();
+        for (Parameter parameter : ((ParameterizedConfig)config).parameters) {
+            if (parameter instanceof Parameter.Direct) directs.add((Parameter.Direct)parameter);
+            else if (parameter instanceof Parameter.Choice)
+                java.util.Collections.addAll(directs,((Parameter.Choice)parameter).directs);
+        }
+        restoreCloudSignal(config,directs);
+        for (Parameter.Direct parameter : directs) {
+            for (String path : parameter.paths) {
+                if (!path.contains(".region.shape")) continue;
+                String[] parts=path.split("\\.");
+                Object object=config, parent=null;
+                Field parentField=null;
+                for (int i=0;i<parts.length && object!=null;i++) {
+                    String part=parts[i];
+                    if (object instanceof RegionConfig.Default && part.equals("shape")
+                            && parentField!=null) {
+                        ShapeConfig geometry;
+                        if (i+1<parts.length && parts[i+1].equals("radius")) geometry=new ShapeConfig.Circle();
+                        else if (i+1<parts.length && parts[i+1].equals("shapes[0]")) {
+                            ShapeConfig.Compound compound=new ShapeConfig.Compound();
+                            compound.shapes=new ShapeConfig.TransformedShape[]{new ShapeConfig.TransformedShape()};
+                            geometry=compound;
+                        } else if (i+1==parts.length) geometry=new ShapeConfig.Point();
+                        else break; // Unknown geometry must not be guessed.
+                        RegionConfig.Transformed region=new RegionConfig.Transformed();
+                        region.location=((RegionConfig.Default)object).location;
+                        region.shape=geometry;
+                        parentField.set(parent,region);
+                        object=region;
+                    }
+                    int bracket=part.indexOf('[');
+                    String name=(bracket<0?part:part.substring(0,bracket)).replace("_","");
+                    Field found=null;
+                    for (Field field : object.getClass().getFields()) {
+                        if (field.getName().replace("_","").equalsIgnoreCase(name)) { found=field; break; }
+                    }
+                    if (found==null) break;
+                    parent=object; parentField=found; object=found.get(object);
+                    if (bracket>=0 && object!=null) {
+                        String subscript=part.substring(bracket+1,part.indexOf(']',bracket));
+                        if (!subscript.matches("[0-9]+")) break;
+                        int index=Integer.parseInt(subscript);
+                        if (!object.getClass().isArray() || index>=Array.getLength(object)) break;
+                        object=Array.get(object,index); parentField=null;
+                    }
+                }
+            }
+        }
+    }
+
+    private static void restoreCloudSignal(ManagedConfig config,List<Parameter.Direct> directs) {
+        if (!(config instanceof ActorConfig)
+                || !"Bomb/Parts/Chemical (Cloud)".equals(config.getName())) return;
+        boolean namePath=false,regionPath=false;
+        for (Parameter.Direct parameter : directs) for (String path : parameter.paths) {
+            namePath|=path.equals("implementation.handlers[1].action.name");
+            regionPath|=path.equals("implementation.handlers[1].action.target.region.shape.radius");
+        }
+        if (!namePath || !regionPath) return;
+        ActorConfig.Original actor=((ActorConfig)config).implementation instanceof ActorConfig.Original
+            ? (ActorConfig.Original)((ActorConfig)config).implementation : null;
+        if (actor==null || actor.handlers.length<2 || !(actor.handlers[1] instanceof HandlerConfig.Timer)) return;
+        HandlerConfig.Timer handler=(HandlerConfig.Timer)actor.handlers[1];
+        if (!(handler.action instanceof ActionConfig.SpawnActor)
+                || ((ActionConfig.SpawnActor)handler.action).actor!=null) return;
+        // These two exported parameter paths identify Signal + Intersecting;
+        // a null SpawnActor cannot satisfy either native property contract.
+        ActionConfig.Signal signal=new ActionConfig.Signal();
+        TargetConfig.Intersecting target=new TargetConfig.Intersecting();
+        RegionConfig.Transformed region=new RegionConfig.Transformed();
+        region.shape=new ShapeConfig.Circle();
+        target.region=region; signal.target=target; handler.action=signal;
     }
 }
