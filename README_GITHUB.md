@@ -1,4 +1,11 @@
-# Checkout de fuentes
+# Spiral Knights Server: checkout de fuentes
+
+Repositorio: [ffxxx00/spiral-knights-server](https://github.com/ffxxx00/spiral-knights-server).
+
+```powershell
+git clone https://github.com/ffxxx00/spiral-knights-server.git
+cd spiral-knights-server
+```
 
 Este repositorio contiene el servidor, los parches locales del cliente,
 los lanzadores, las pruebas y la documentacion. El historial inicial fue

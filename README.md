@@ -1,4 +1,11 @@
-# Spiral Knights Private
+# Spiral Knights Server
+
+Reimplementación del servidor de Spiral Knights para ejecutar el cliente contra
+un servidor propio. El objetivo es reproducir el comportamiento vanilla mediante
+contratos del cliente y pruebas de protocolo, combate y escenas. El proyecto está
+en desarrollo y todavía no alcanza paridad 1:1.
+
+Repositorio: [ffxxx00/spiral-knights-server](https://github.com/ffxxx00/spiral-knights-server).
 
 **El repositorio Git contiene fuentes y documentación; no descarga el juego ni
 Java.** Para preparar un checkout, consultar [README_GITHUB.md](README_GITHUB.md).
