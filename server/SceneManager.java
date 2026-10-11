@@ -73,6 +73,7 @@ public class SceneManager {
     private TudeySceneModel havenSceneModel;
     private TudeySceneModel trainingSceneModel;
     private final CombatWorld combatWorld;
+    private final SceneCollision havenCollision, trainingCollision;
     private static Field bodyOidField;
 
     static {
@@ -143,7 +144,11 @@ public class SceneManager {
             System.err.println("[SceneManager] Failed to load Training Hall: " + e.getMessage());
         }
         this.trainingConfig = resolvedTrainingConfig;
+        this.havenSceneModel.init(this.configManager);
+        this.trainingSceneModel.init(this.configManager);
         this.combatWorld = new CombatWorld(this.configManager, this.trainingSceneModel);
+        this.havenCollision=new SceneCollision(this.havenSceneModel,null);
+        this.trainingCollision=new SceneCollision(this.trainingSceneModel,this.combatWorld);
 
         dobjMgr.register(this.sceneObject);
         dobjMgr.register(this.trainingSceneObject);
@@ -326,8 +331,10 @@ public class SceneManager {
             player.a(combatScene ? COMBAT_PLAYER_ACTOR_CONFIG : PLAYER_ACTOR_CONFIG,
                 modelConfig, new Object[0]);
         if (!combatScene) {
-            return new Knight(actorConfig, pawnId, createdTimestamp,
+            Knight knight=new Knight(actorConfig, pawnId, createdTimestamp,
                 new Vector2f(spawnX, spawnY), 0.0f);
+            knight.init(this.configManager);
+            return knight;
         }
 
         Dungeoneer dungeoneer = new Dungeoneer(
@@ -360,6 +367,9 @@ public class SceneManager {
             manager.loadGroup(LevelTableConfig.class, "rsrc/config/level_table.dat");
             manager.loadGroup(ItemPropertyConfig.class, "rsrc/config/item_property.dat");
             manager.loadGroup(com.threerings.projectx.config.EmoteConfig.class, "rsrc/config/emote.dat");
+            manager.loadGroup(com.threerings.tudey.config.TileConfig.class,"rsrc/config/tile.dat");
+            manager.loadGroup(com.threerings.tudey.config.PlaceableConfig.class,"rsrc/config/placeable.dat");
+            manager.loadGroup(com.threerings.tudey.config.PathConfig.class,"rsrc/config/path.dat");
             System.out.println("[SceneManager] Loaded installed combat configs: actors="
                 + actors + " items=" + items + " attacks=" + attacks);
         } catch (Exception e) {
@@ -376,6 +386,10 @@ public class SceneManager {
 
     public CombatWorld getCombatWorld() {
         return this.combatWorld;
+    }
+
+    public SceneCollision getCollision(int sceneId) {
+        return sceneId==TRAINING_SCENE_ID?this.trainingCollision:this.havenCollision;
     }
 
     public LevelItem getEquippedWeapon(PlayerObject player, int weaponIndex) {

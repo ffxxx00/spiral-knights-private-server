@@ -244,6 +244,9 @@ public class ClientSession implements Runnable {
         this.playerObject.eye = ProjectXCodes.EyeType.DEFAULT;
         this.playerObject.height = ProjectXCodes.KnightHeight.BASE;
         this.playerObject.rank = new RankPair(com.threerings.projectx.mission.data.MissionCodes.bAR);
+        // Native dN(rarity) checks clearance progress, not the displayed rank.
+        // Unlock 2/3/4/5-star equipment without granting unrelated progress bits.
+        this.playerObject.progressFlags |= 64 | 128 | 256 | 512;
         this.playerObject.prestige = 50000;
         this.playerObject.crowns = 999999;
         this.playerObject.energy = 10000;
@@ -983,7 +986,8 @@ public class ClientSession implements Runnable {
                     x = clamp(x, this.movementConfig.minX, this.movementConfig.maxX);
                     y = clamp(y, this.movementConfig.minY, this.movementConfig.maxY);
                 }
-                this.authoritativeActor.tz().s(x, y);
+                this.sceneMgr.getCollision(this.currentSceneId).move(
+                    this.authoritativeActor, x, y);
                 this.authoritativeActor.setDirty(true);
             }
 

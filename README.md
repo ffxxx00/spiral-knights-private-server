@@ -94,13 +94,19 @@ combos, carga, recuperación y controles. `test_server.bat` también ejecuta
 `FROZEN VANILLA COMBAT SIMULATION TEST PASSED`; evidencia en
 `validation/test-authoritative-combat.log`. Ver [combate vanilla](docs/COMBATE_VANILLA.md).
 Todavía faltan estados alterados, IA, daño al jugador, reacciones, autoapuntado,
-colisiones detalladas y validación de todas las armas para afirmar paridad 1:1.
+desniveles y validación de todas las armas para afirmar paridad 1:1.
 No hay progreso persistente.
 El arsenal local reúne las 374 espadas, pistolas y bombas creables del catálogo
-congelado, a nivel 10, más cinco piezas de equipo. El rango máximo es 10-3.
+congelado, a nivel 10, más cinco piezas de equipo. El rango máximo es 10-3,
+con los permisos nativos de equipo de 2 a 5 estrellas habilitados.
 Se pueden equipar y desequipar desde el cliente; yelmo y armadura usan sus ranuras
 originales y el modelo de combate evita duplicar el escudo y el arma del sprite.
 Combuster cargada genera cinco explosiones secundarias con daño real. La cadencia
 de esa ráfaga usa compatibilidad local de 100 ms y aún necesita comparación vanilla.
 Verificación actual: `validation/test-training-equipment.log`.
+El movimiento resuelve paredes, tiles y objetos del mapa congelado en Haven y
+Training Hall, y las formas de los cubos vivos. Los cubos muertos dejan de bloquear.
+Las balas usan su propia máscara de colisión y se detienen contra las paredes
+que les corresponden; una barrera baja puede bloquear al jugador y permitir disparos.
+Pruebas de colisión y permisos: `validation/test-clearance-collision-full.log`.
 El feed social tampoco está implementado; sus paneles pueden mostrar errores. Para LAN/VPN consulta `server/README_LAN.md`.

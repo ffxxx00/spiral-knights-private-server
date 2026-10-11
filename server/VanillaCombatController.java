@@ -27,7 +27,7 @@ public final class VanillaCombatController extends i {
         this(scene,player,pawn,timestamp,scene.getCombatWorld());
     }
     VanillaCombatController(SceneManager scene,PlayerObject player,Dungeoneer pawn,int timestamp,CombatWorld world) {
-        super(new Context(scene,player,pawn),pawn,timestamp);
+        super(new Context(scene,player,pawn,world),pawn,timestamp);
         this.scene=scene; this.pawn=pawn; this.player=player;
         this.world=world;
         initializeMovement(pawn);
@@ -42,8 +42,8 @@ public final class VanillaCombatController extends i {
     private static void initializeMovement(Mobile pawn) {
         // This client-only frozen Mobile has no assignment to _maxStep. The
         // native controller clamps every integration step to zero otherwise.
-        // With the emulator's unobstructed map policy, retain the native motion
-        // without imposing an additional step-distance clamp.
+        // The native integrator subdivides at 60 Hz; its context now resolves
+        // map/enemy penetration after every integration step.
         if (pawn.aeb() != 0) return;
         try {
             java.lang.reflect.Field step=Mobile.class.getDeclaredField("_maxStep");
@@ -84,17 +84,19 @@ public final class VanillaCombatController extends i {
     public int weaponIndex() { return weaponIndex; }
     private static final class Context implements i.c {
         final SceneManager scene; final PlayerObject player; final Dungeoneer pawn;
-        Context(SceneManager scene,PlayerObject player,Dungeoneer pawn) { this.scene=scene; this.player=player; this.pawn=pawn; }
+        final SceneCollision collision;
+        Context(SceneManager scene,PlayerObject player,Dungeoneer pawn,CombatWorld world) {
+            this.scene=scene; this.player=player; this.pawn=pawn;
+            this.collision=new SceneCollision(scene.getSceneModel(SceneManager.TRAINING_SCENE_ID),world);
+        }
         public ConfigManager getConfigManager() { return scene.getConfigManager(); }
         public PlayerObject CT() { return player; }
         public TudeySceneModel Sn() { return scene.getSceneModel(SceneManager.TRAINING_SCENE_ID); }
         public Actor cY(int id) { return id==pawn.vw()?pawn:scene.getCombatWorld().snapshot(0).get(id); }
         public Actor a(Dungeoneer actor,float distance,float angle,int mask) { return null; }
-        // Detailed map collision/auto-targeting is a separate, still absent layer.
-        // These retain the emulator's existing unobstructed movement policy.
-        public boolean a(Actor actor,Shape shape,Vector2f result) { return false; }
-        public boolean a(Actor actor,Shape shape) { return false; }
-        public boolean a(int mask,Shape shape) { return false; }
-        public int b(Actor actor,Shape shape) { return 0; }
+        public boolean a(Actor actor,Shape shape,Vector2f result) { return collision.penetration(actor,shape,result); }
+        public boolean a(Actor actor,Shape shape) { return collision.intersects(actor,shape); }
+        public boolean a(int mask,Shape shape) { return collision.intersects(mask,shape); }
+        public int b(Actor actor,Shape shape) { return collision.directions(actor,shape); }
     }
 }

@@ -18,7 +18,9 @@ El Training Hall ahora tiene daño autoritativo contra los **11 cubos originales
 El inventario local incluye las **374 armas creables** de tipo espada, pistola y
 bomba de esta versión, además de cinco piezas de equipo: **379 objetos** en total.
 Se entregan a nivel 10. El rango es el máximo original **10-3**, con cuatro ranuras
-de armas y dos de talismanes. El servicio de objetos aplica equipar y desequipar
+de armas y dos de talismanes. Además se habilitan los permisos de progreso para
+equipar objetos de 2 a 5 estrellas: el cliente consulta esos permisos, no solo
+el rango mostrado. El servicio de objetos aplica equipar y desequipar
 y notifica el equipo y las armas de la party. Yelmo ocupa la ranura 0 y armadura
 la 1. El sprite de combate dibuja su propio escudo en la mano; el modelo base
 ya no envía otro escudo ni otra arma. En Haven se conserva el escudo guardado.
@@ -49,7 +51,10 @@ Los cubos de profundidad 0 tienen 30 de vida. La espada equipada puede matarlos 
 | Nube química y secundarios de Polaris | Actores y temporizadores básicos; estados alterados y efectos pendientes |
 | Escudo y esquiva | Estados originales; bloqueo de daño entrante aún sin validar |
 | IA, ataques enemigos y daño al jugador | Pendientes; los cubos de esta implementación son estacionarios |
-| Autoapuntado, paredes, desniveles y objetos | Pendientes; se conserva el límite exterior del movimiento |
+| Paredes, tiles y objetos estáticos | Geometría y máscaras nativas habilitadas en Haven y Training Hall |
+| Colisión con enemigos | Cubos vivos bloquean el movimiento; muertos liberan el paso |
+| Balas contra el mapa | Contacto barrido y máscara propia del proyectil; detona en el primer obstáculo |
+| Autoapuntado y desniveles | Pendientes de validación; se conserva el límite exterior del movimiento |
 | Reacciones, empuje, invulnerabilidad y limitadores | Pendientes |
 | Todas las armas y acciones especiales | Sin validación exhaustiva; la consola identifica acciones sin implementar |
 
@@ -59,7 +64,7 @@ Una animación de escudo no demuestra bloqueo ni una nube demuestra quemadura. L
 
 `test_server.bat` ejecuta `TestCombatSimulation`, con relojes deterministas, y `TestEmulatorProtocol`, sobre TCP 47625. Comprueba impactos, fallos de alcance/orientación, cancelación y desconexión, salud por ActorDelta, muerte/reaparición, bala/contacto/fizzle, bomba/mecha/nube y detención del movimiento. La prueba integral conserva login, Haven, portales, controles, cadencia, ACK, dos clientes y keepalive.
 
-La simulación no sustituye una comparación visual cuadro por cuadro con vanilla ni una prueba entre dos PCs. Evidencia: `validation/test-authoritative-combat.log`.
+La simulación no sustituye una comparación visual cuadro por cuadro con vanilla ni una prueba entre dos PCs. Evidencia actual: `validation/test-clearance-collision-full.log`.
 
 `CombatWorld` pertenece a la escena y se actualiza una vez por tick; todas las sesiones reciben actores de la misma simulación. `VanillaCombatController` reutiliza el controlador instalado. `ClientSession` conserva la captura conjunta del estado y su input confirmado.
 

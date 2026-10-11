@@ -22,6 +22,7 @@ import com.threerings.tudey.shape.config.ShapeConfig;
 /** Scene-owned combat, driven by frozen attack/fire/actor/depth catalogs. */
 public final class CombatWorld {
     private final InstalledConfigManager configs;
+    private final TudeySceneModel model;
     private final List<TrainingTarget> targets = new ArrayList<>();
     private final ConcurrentLinkedQueue<AttackRequest> incoming = new ConcurrentLinkedQueue<>();
     private final PriorityQueue<Fire> pending = new PriorityQueue<>(
@@ -36,6 +37,7 @@ public final class CombatWorld {
     public CombatWorld(InstalledConfigManager configs, TudeySceneModel model) {
         this.configs = configs;
         if (model == null) throw new IllegalStateException("Training map unavailable for combat");
+        this.model=model;
         for (TudeySceneModel.Entry entry : model.adH()) {
             if (entry.getKey() instanceof Integer) nextActorId = Math.max(nextActorId,(Integer)entry.getKey());
         }
@@ -272,6 +274,17 @@ public final class CombatWorld {
                 Shape base=actor.adW().shape.acP().d(new Transform2D(before,actor.tA()));
                 Shape swept=base.A(motion);
                 float earliest=Float.POSITIVE_INFINITY;
+                synchronized(model) {
+                    if(model.a(actor,swept)) {
+                        float lower=0,upper=1;
+                        for(int i=0;i<18;i++) {
+                            float middle=(lower+upper)/2;
+                            if(model.a(actor,base.A(new Vector2f(motion.x*middle,motion.y*middle))))upper=middle;
+                            else lower=middle;
+                        }
+                        earliest=upper;
+                    }
+                }
                 for (TrainingTarget target : targets) {
                     if (target.actor==null || target.health<=0
                             || (actor.adW().collisionMask&target.config.collisionFlags)==0) continue;

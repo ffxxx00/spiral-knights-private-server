@@ -27,6 +27,7 @@ public final class TestCombatSimulation {
             Field field=ClientSession.class.getDeclaredField("playerObject"); field.setAccessible(true);
             PlayerObject player=(PlayerObject)field.get(session);
             checkEquipment(scene,player);
+            checkCollisions(scene,player);
             checkMelee(scene,player);
             checkMissAndCancellation(scene,player);
             checkProjectile(scene,player);
@@ -140,7 +141,7 @@ public final class TestCombatSimulation {
     }
 
     private static void checkNativeControls(SceneManager scene,PlayerObject player) {
-        Dungeoneer pawn=(Dungeoneer)scene.createPlayerKnight(player,1,294,0,0);
+        Dungeoneer pawn=(Dungeoneer)scene.createPlayerKnight(player,1,294,SceneManager.TRAINING_SPAWN_X,SceneManager.TRAINING_SPAWN_Y);
         pawn.aU(0,1);
         VanillaCombatController controller=new VanillaCombatController(scene,player,pawn,1);
         controller.input(new DungeonInputFrame(21,0f,0f,4,21));
@@ -164,10 +165,13 @@ public final class TestCombatSimulation {
 
     private static void checkEquipment(SceneManager scene,PlayerObject player) {
         check(player.rank.equals(com.threerings.projectx.mission.data.MissionCodes.bAR),"Maximum native rank missing");
+        for(int rarity=0;rarity<=5;rarity++)
+            check(player.dN(rarity),"Native client refuses equipment rarity "+rarity);
         java.util.Set<String> names=new java.util.HashSet<>();
         for(com.threerings.projectx.item.data.Item item:player.items) {
             check(names.add(item.Mv().getName()),"Duplicate arsenal item");
             check(scene.resolveItemConfig(item)!=null,"Unresolved inventory configuration");
+            check(player.dN(scene.resolveItemConfig(item).rarity),"Client rank gate blocks "+item.Mv());
         }
         for(com.threerings.config.ManagedConfig entry:scene.getConfigManager().bd(com.threerings.projectx.item.config.ItemConfig.class).kL()) {
             com.threerings.projectx.item.config.ItemConfig config=scene.getConfigManager().d(com.threerings.projectx.item.config.ItemConfig.class,entry.getName());
@@ -211,6 +215,90 @@ public final class TestCombatSimulation {
         System.out.println("[CombatTest] complete arsenal, native slots, max rank, shield and equipment passed");
     }
 
+    private static void checkCollisions(SceneManager scene,PlayerObject player) {
+        float trainingWall=0;
+        for(int id:new int[]{1,294}) {
+            float x=id==1?SceneManager.HAVEN_SPAWN_X:SceneManager.TRAINING_SPAWN_X;
+            float y=id==1?SceneManager.HAVEN_SPAWN_Y:SceneManager.TRAINING_SPAWN_Y;
+            Actor pawn=scene.createPlayerKnight(player,1,id,x,y);
+            TudeySceneModel model=scene.getSceneModel(id);
+            check(!model.a(pawn,collisionShape(pawn,model)),"Spawn intersects frozen map: "+id);
+            float blockedX=x;
+            for(int step=1;step<=800;step++) {
+                pawn.tz().s(x+step*0.1f,y);
+                if(model.a(pawn,collisionShape(pawn,model))) { blockedX=pawn.tz().x;break; }
+            }
+            check(blockedX>x,"No frozen map wall found on test ray: "+id);
+            if(id==294)trainingWall=blockedX;
+            pawn.tz().s(x,y);
+            scene.getCollision(id).move(pawn,blockedX+2,y);
+            check(pawn.tz().x>x && pawn.tz().x<blockedX,"Town movement tunneled through map wall: "+id+" start="+x+","+y+" blockedX="+blockedX+" end="+pawn.tz());
+            check(!model.a(pawn,collisionShape(pawn,model)),"Map collision left pawn penetrating: "+id);
+            if(pawn instanceof Dungeoneer) {
+                pawn.tz().s(x,y);
+                ((Dungeoneer)pawn).aU(0,1);
+                VanillaCombatController controller=new VanillaCombatController(scene,player,(Dungeoneer)pawn,1);
+                int duration=(int)Math.ceil((blockedX+2-x)/5f*1000);
+                for(int time=21;time<duration+100;time+=20)
+                    controller.input(new DungeonInputFrame(time,0,0,1,21));
+                check(pawn.tz().x>x && pawn.tz().x<blockedX,"Native map movement failed: start="+x+" wall="+blockedX+" end="+pawn.tz());
+                check(!model.a(pawn,collisionShape(pawn,model)),"Native controller left map penetration");
+            }
+        }
+        CombatWorld world=newWorld(scene);
+        Monster target=(Monster)world.snapshot(1).values().stream()
+            .filter(a->a.tz().x==31.5f && a.tz().y==-0.5f).findFirst().orElseThrow();
+        Dungeoneer pawn=pawn(scene,player,target,1.5f);
+        TudeySceneModel model=scene.getSceneModel(294);
+        SceneCollision collision=new SceneCollision(model,world);
+        check(!collision.intersects(pawn,collisionShape(pawn,model)),"Enemy test starts obstructed");
+        VanillaCombatController controller=new VanillaCombatController(scene,player,pawn,1,world);
+        float start=pawn.tz().x;
+        for(int time=21;time<=801;time+=20)controller.input(new DungeonInputFrame(time,0,0,1,21));
+        check(pawn.tz().x>start && pawn.tz().x<target.tz().x,"Walking crossed a living cube");
+        check(!collision.intersects(pawn,collisionShape(pawn,model)),"Enemy collision left penetration");
+        float stopped=pawn.tz().x;
+        AttackConfig.Original attack=scene.resolveAttack(pawn.Rj(),0);
+        pawn.aU(292,821);world.attack(pawn,attack,821);
+        world.step(821+attack.Qh(),Map.of(pawn.vw(),pawn));
+        check(((Monster)world.snapshot(0).get(target.vw())).RA()==0,"Collision release test failed to kill cube");
+        collision.move(pawn,target.tz().x+1,target.tz().y);
+        check(pawn.tz().x>target.tz().x && pawn.tz().x>stopped,"Dead enemy still blocks movement");
+        CombatWorld shots=newWorld(scene);
+        Dungeoneer shooter=(Dungeoneer)scene.createPlayerKnight(player,1,294,trainingWall-2,SceneManager.TRAINING_SPAWN_Y);
+        scene.equipCombatWeapon(shooter,player,2);
+        AttackConfig.Original shot=scene.resolveAttack(shooter.Rj(),0);
+        shooter.aU(292,21);shots.attack(shooter,shot,21);
+        int fired=21+shot.Qh();
+        Bullet bullet=(Bullet)shots.step(fired,Map.of(shooter.vw(),shooter)).values().stream()
+            .filter(a->a instanceof Bullet).findFirst().orElseThrow();
+        // Native projectile mask differs from the player's: low barriers may
+        // stop walking while allowing shots. Find the bullet's actual wall.
+        com.threerings.math.Vector2f bulletSpawn=new com.threerings.math.Vector2f(bullet.tz());
+        float bulletWall=Float.NaN;
+        for(int step=1;step<500;step++) {
+            bullet.tz().s(bulletSpawn.x+step*0.1f,bulletSpawn.y);
+            if(model.a(bullet,collisionShape(bullet,model))) {bulletWall=bullet.tz().x;break;}
+        }
+        bullet.tz().q(bulletSpawn);
+        check(Float.isFinite(bulletWall),"No native projectile wall found");
+        boolean wallHit=false;
+        for(int time=fired+20;time<fired+bullet.Rg();time+=20) {
+            Actor updated=shots.step(time,Map.of(shooter.vw(),shooter)).get(bullet.vw());
+            if(updated!=null && updated.adY()<Integer.MAX_VALUE) {
+                check(Math.abs(updated.tz().x-bulletWall)<0.15f,"Projectile did not stop at its native map boundary: "+updated.tz()+" wall="+bulletWall);
+                wallHit=true;break;
+            }
+        }
+        check(wallHit,"Projectile crossed frozen wall or only expired at fuse time");
+        System.out.println("[CombatTest] Haven/Training walls, native movement, live/dead enemy and projectile collision passed");
+    }
+
+    private static com.threerings.tudey.shape.Shape collisionShape(Actor actor,TudeySceneModel model) {
+        return actor.adW().p(model.getConfigManager()).acP()
+            .d(new com.threerings.math.Transform2D(actor.tz(),actor.tA()));
+    }
+
     private static com.threerings.projectx.item.data.Item findItem(PlayerObject player,long id) {
         for(com.threerings.projectx.item.data.Item item:player.items) if(item.VA()==id)return item;
         throw new AssertionError("Inventory item absent");
@@ -222,8 +310,12 @@ public final class TestCombatSimulation {
             for(com.threerings.projectx.item.data.Item item:player.items)
                 if(item.Mv().getName().equals(name))player.equipment[6]=item.VA();
             CombatWorld world=newWorld(scene);
-            Monster target=firstTarget(world);
+            // Use the open gun range; the old five-unit charge fixture stood
+            // outside the west room, shooting through its wall.
+            Monster target=(Monster)world.snapshot(1).values().stream()
+                .filter(a->a.tz().x==38.5f && a.tz().y==-3.5f).findFirst().orElseThrow();
             Dungeoneer pawn=pawn(scene,player,target,name.endsWith("Combuster")?5f:1f);
+            check(!scene.getSceneModel(294).a(pawn,collisionShape(pawn,scene.getSceneModel(294))),"Sword charge test starts inside map geometry");
             VanillaCombatController controller=new VanillaCombatController(scene,player,pawn,1,world);
             boolean charging=false,charged=false,chargedDamage=false;
             java.util.Set<Integer> burstIds=new java.util.HashSet<>();

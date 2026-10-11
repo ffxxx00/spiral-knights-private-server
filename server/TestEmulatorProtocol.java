@@ -130,6 +130,9 @@ public class TestEmulatorProtocol {
             check(player.availableKnights[0].model.kW().size() > 3,
                 "Character card model omitted equipped armor/helm/shield parameters");
             check(player.items != null && !player.items.isEmpty(), "Player inventory is empty");
+            check(player.rank.equals(com.threerings.projectx.mission.data.MissionCodes.bAR),"Wire player rank is not maximum");
+            for(int rarity=0;rarity<=5;rarity++)
+                check(player.dN(rarity),"Wire player lacks native equip clearance for rarity "+rarity);
             for (Item item : player.items) {
                 check(item != null, "Player inventory contains a null item");
             }
