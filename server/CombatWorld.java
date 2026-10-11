@@ -19,7 +19,7 @@ import com.threerings.tudey.data.actor.Mobile;
 import com.threerings.tudey.shape.Shape;
 import com.threerings.tudey.shape.config.ShapeConfig;
 
-/** Scene-owned combat, driven by frozen attack/fire/actor/depth catalogs. */
+/** Scene-owned combat, driven by client attack/fire/actor/depth catalogs. */
 public final class CombatWorld {
     private final InstalledConfigManager configs;
     private final TudeySceneModel model;
@@ -63,7 +63,7 @@ public final class CombatWorld {
             if (health <= 0) throw new IllegalStateException("Training cube health unavailable");
             targets.add(new TrainingTarget(actorRef,monster,new Vector2f(position.x,position.y),angle,health,((Number)delay).intValue()));
         }
-        if (targets.isEmpty()) throw new IllegalStateException("Frozen map contains no training cubes");
+        if (targets.isEmpty()) throw new IllegalStateException("Client map contains no training cubes");
         System.out.println("[COMBAT] loaded vanilla training targets="+targets.size()+" depth=0");
     }
 
@@ -135,7 +135,7 @@ public final class CombatWorld {
             Object explicit = ref == null ? null : ref.kW().get("Shape");
             Shape shape;
             if (explicit instanceof ShapeConfig.TransformedShape || explicit instanceof ShapeConfig) {
-                // Frozen derived fire references explicitly bind this shape.
+                // Client derived fire references explicitly bind this shape.
                 // Their legacy template parameter path may point to a Default
                 // region after import; retain the actual reference geometry.
                 Shape local = explicit instanceof ShapeConfig.TransformedShape

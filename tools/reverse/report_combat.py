@@ -1,4 +1,4 @@
-"""Validate the frozen reachability audit and emit an authored metadata summary."""
+"""Validate the client reachability audit and emit an authored metadata summary."""
 import argparse
 from collections import Counter
 import hashlib
@@ -14,14 +14,14 @@ def report(root: Path) -> None:
     assert data["version"] == "20261006114613" and data["schema"] == 1
     weapons = data["weapons"]
     names = [weapon["name"] for weapon in weapons]
-    assert len(names) == len(set(names)) == 374, "Incomplete frozen arsenal"
+    assert len(names) == len(set(names)) == 374, "Incomplete client arsenal"
     counts = Counter(kind for weapon in weapons for kind in set(weapon["types"]))
     assert dict(counts) == data["weapons_by_type"], "Aggregate reachability mismatch"
     for path, digest in data["input_sha256"].items():
         assert hashlib.sha256((root / path).read_bytes()).hexdigest() == digest, path
     with sqlite3.connect((directory / "index.sqlite").as_uri() + "?mode=ro", uri=True) as db:
         classes = {row[0] for row in db.execute("SELECT name FROM classes")}
-    assert set(counts) <= classes, "Audit type absent from frozen bytecode index"
+    assert set(counts) <= classes, "Audit type absent from client bytecode index"
     issues = [(w["name"], issue) for w in weapons for issue in w["issues"]]
     assert not issues, f"Unresolved references: {issues[:5]}"
     # Separate golden data checks from any claim of server behavior.
@@ -36,7 +36,7 @@ def report(root: Path) -> None:
     incomplete = sum(bool(w["incomplete_nodes"]) for w in weapons)
     binding_log = (directory / "combat-import.log").read_text(encoding="utf-8-sig")
     binding = Counter(re.findall(r"Failed to find property\. \[name=([^,]+)", binding_log))
-    lines = ["# Auditoría de acciones del arsenal congelado", "",
+    lines = ["# Auditoría de acciones del arsenal", "",
              "Versión 20261006114613. Análisis: 2026-10-11.", "",
              "Se recorrieron los ataques normales y cargados de las **374 armas** creables:", "",
              *[f"- {kind}: {count}." for kind, count in sorted(kinds.items())], "",

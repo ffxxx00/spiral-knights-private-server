@@ -31,7 +31,7 @@ public final class CombatVisualServer {
                         pawn.tz().s(37.5f,-3.5f); pawn.ah(0); pawn.aU(292,time);
                         scene.getCombatWorld().attack(pawn,scene.resolveAttack(pawn.Rj(),0),time);
                         injected=true;
-                        System.out.println("[VISUAL-COMBAT] injected sword against frozen cube time="+time);
+                        System.out.println("[VISUAL-COMBAT] injected sword against client cube time="+time);
                     }
                 }
                 Thread.sleep(50L);

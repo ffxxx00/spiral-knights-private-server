@@ -1,6 +1,6 @@
 # Movimiento, cargas e inventario — 2026-10-11
 
-Referencia única: copia congelada 20261006114613. Ningún JAR o recurso modificado.
+Referencia única: copia 20261006114613. Ningún JAR o recurso modificado.
 
 - `Mobile._maxStep` comienza en cero y la clase del cliente no lo inicializa.
   `tudey.util.j.d(float,int)` limita a ese valor cada integración: se reproducía
@@ -26,7 +26,7 @@ Referencia única: copia congelada 20261006114613. Ningún JAR o recurso modific
   count como String/Number y los parámetros de daño, escala y color de cada arma.
 - La plantilla importada no conserva el contador/tick original. La onda local
   aplica combat.burstIntervalMs=100 explícitamente como compatibilidad, NO como
-  temporización vanilla verificada. La utilidad congelada DamageSummary.t se usa
+  temporización vanilla verificada. La utilidad DamageSummary.t se usa
   para la división de daño mixto sin splitDepth; esa rama necesita comparación
   con resultados vanilla. Quemadura y otras condiciones no están implementadas.
 
@@ -38,4 +38,4 @@ La inspección del modelo y bytecode no sustituye una verificación visual del j
 
 Resultado: suite integral y simulación aprobadas. test-combat-equipment-refresh.log
 confirma conservar el índice de arma y cancelar el ataque al cambiar equipo.
-verificar-copia.ps1 confirmó los ocho hashes de datos/JAR congelados sin cambios.
+verificar-copia.ps1 confirmó los ocho hashes de datos/JAR sin cambios.

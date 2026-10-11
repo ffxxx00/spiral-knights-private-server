@@ -3,7 +3,7 @@
 `launch_client.ps1` utiliza este overlay únicamente en loopback y comprueba
 primero el SHA-256 de `code/projectx-pcode.jar` en `frozen-version.json`.
 `-NetworkMode` conserva la política original en loopback. LAN/VPN no carga
-estas clases. Los binarios congelados permanecen intactos.
+estas clases. Los binarios permanecen intactos.
 
 `portable/BuildLocalClient.java` genera copias de TudeySceneConfig y
 LevelSceneConfig. Cambia únicamente el operando del retorno de `CU()` a la

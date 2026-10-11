@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.MemoryStack;
 
-/** Checks the frozen LWJGL backend with the client's bundled Java runtime. */
+/** Checks the client LWJGL backend with the client's bundled Java runtime. */
 public final class UnsafeMemoryProbe {
     public static void main(String[] args) {
         String backend = MemoryUtil.memBackend().getClass().getName();
@@ -45,6 +45,6 @@ public final class UnsafeMemoryProbe {
             pointers.put(0,MemoryUtil.memAddress(ints));
             if (pointers.get(0) != MemoryUtil.memAddress(ints)) throw new AssertionError("Pointer buffer failed");
         }
-        System.out.println("Frozen LWJGL allocation, addresses, views, arrays, UTF8, stack, pointers and free: PASSED");
+        System.out.println("Client LWJGL allocation, addresses, views, arrays, UTF8, stack, pointers and free: PASSED");
     }
 }

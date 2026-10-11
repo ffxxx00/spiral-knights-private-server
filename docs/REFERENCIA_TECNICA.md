@@ -1,6 +1,6 @@
 # Referencia técnica de la copia independiente
 
-Datos congelados: **20261006114613**. Estado documentado: **2026-10-11**.
+Versión de datos: **20261006114613**. Estado documentado: **2026-10-11**.
 
 ## Componentes
 
@@ -13,11 +13,11 @@ El servidor es un proceso Java separado del cliente. Los lanzadores utilizan rut
 | SceneManager | Configuraciones/mapas de Haven y Training Hall, actores y transiciones |
 | SceneNetworkManager | Relojes de escena compartidos y difusión de actores a los participantes |
 | CombatWorld | Cubos originales, daño, actores de proyectil/bomba y reaparición compartidos |
-| VanillaCombatController | Máquina de estados de combate original de la biblioteca congelada |
+| VanillaCombatController | Máquina de estados de combate original de la biblioteca |
 | MovementConfig | Lectura y validación de server/server.properties |
 | InstalledConfigManager / ItemCatalog | Configuración e inventario desde los datos instalados |
 | portable/LocalPreferencesFactory | Opciones del cliente en profile/preferences, aisladas del Registro |
-| portable/BuildLocalClient | Overlay de las clases congeladas para loopback, verificado antes de generar |
+| portable/BuildLocalClient | Overlay de las clases para loopback, verificado antes de generar |
 
 Los scripts recompilan fuentes al iniciar cuando corresponde. `client-local/classes` contiene clases generadas; no sustituye los JAR originales. El lanzador comprueba el SHA-256 de projectx-pcode.jar antes de aplicar el overlay local.
 
@@ -73,12 +73,12 @@ El cliente fue probado en Haven y Training Hall con `--sun-misc-unsafe-memory-ac
 
 Se han comprobado login local, inventario/modelo, Haven, movimiento y rotación, transiciones a Training Hall y regreso, controles de armas/ataque/carga/defensa/esquiva/shield bash, estados de dos clientes y keepalive. El cliente gráfico se verificó con recursos de esta copia y Java propio.
 
-Hay daño autoritativo comprobado contra los cubos originales del Training Hall, con espada, bala de Polaris y explosión cargada de Ash of Agni. Las formas, tiempos y valores proceden de los datos congelados. Consultar [combate vanilla](COMBATE_VANILLA.md) para pruebas y pendientes: todavía no se acredita paridad completa, estados alterados, IA, daño entrante, reacciones ni colisiones detalladas. Economía, misiones, PvP y persistencia siguen pendientes. El feed social no está implementado. No hay panel web de administración, servicio de Windows, instalador automático ni proceso de actualización de Steam.
+Hay daño autoritativo comprobado contra los cubos originales del Training Hall, con espada, bala de Polaris y explosión cargada de Ash of Agni. Las formas, tiempos y valores proceden de los datos. Consultar [combate vanilla](COMBATE_VANILLA.md) para pruebas y pendientes: todavía no se acredita paridad completa, estados alterados, IA, daño entrante, reacciones ni colisiones detalladas. Economía, misiones, PvP y persistencia siguen pendientes. El feed social no está implementado. No hay panel web de administración, servicio de Windows, instalador automático ni proceso de actualización de Steam.
 
 El alojamiento descrito corresponde a Windows x64. La entrega no incluye un runtime Linux, instrucciones de Docker ni una adaptación probada para macOS/ARM.
 
 ## Desarrollo futuro
 
-Trabajar en una copia de esta carpeta. Conservar AGENTS.md y verificar clases ofuscadas con jdk/bin/javap.exe contra el JAR congelado. Las firmas cambian entre versiones: no asumir que un nombre mantiene su significado. Las pruebas viven en server/TestEmulatorProtocol.java; ejecutar test_server.bat antes de afirmar compatibilidad.
+Trabajar en una copia de esta carpeta. Conservar AGENTS.md y verificar clases ofuscadas con jdk/bin/javap.exe contra el JAR. Las firmas cambian entre versiones: no asumir que un nombre mantiene su significado. Las pruebas viven en server/TestEmulatorProtocol.java; ejecutar test_server.bat antes de afirmar compatibilidad.
 
 Para cambiar cliente/datos, preparar otra versión aislada y una nueva adaptación/verificación. No copiar automáticamente desde la instalación en vivo ni mezclar sus recursos con esta entrega.

@@ -1,12 +1,12 @@
 # Preparar la copia para entregar al anfitrión y a los jugadores
 
-La documentación sola no aloja el juego. Tu amigo necesita los archivos de la copia congelada y las guías; cada invitado necesita la misma copia para abrir el cliente.
+La documentación sola no aloja el juego. Tu amigo necesita los archivos de la copia y las guías; cada invitado necesita la misma copia para abrir el cliente.
 
 ## Contenido de la entrega
 
 | Carpeta/archivo | Incluir | Motivo |
 | --- | --- | --- |
-| code, rsrc, scenes, native | Sí, completos | Bibliotecas, recursos, mapas y librerías nativas congeladas |
+| code, rsrc, scenes, native | Sí, completos | Bibliotecas, recursos, mapas y librerías nativas |
 | java_vm, jdk | Sí, completos | Java del cliente y herramientas/Java del servidor, sin instalación de sistema |
 | server | Sí | Fuentes, clases y configuración del emulador |
 | portable | Sí | Preferencias aisladas y generador del overlay |

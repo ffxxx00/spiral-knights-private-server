@@ -1,6 +1,6 @@
 # Spiral Knights Private: empezar aquí
 
-Versión congelada del cliente: **20261006114613**. Guías revisadas el **10 de octubre de 2026** para una PC con Windows x64.
+Versión del cliente: **20261006114613**. Guías revisadas el **10 de octubre de 2026** para una PC con Windows x64.
 
 Abrí **docs/MANUAL_COMPLETO.html** con doble clic: contiene toda la documentación y funciona sin conexión. Las fuentes editables están en [docs/README.md](docs/README.md).
 

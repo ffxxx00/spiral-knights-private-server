@@ -1,10 +1,10 @@
-# Validación del análisis del cliente congelado
+# Validación del análisis del cliente
 
 Fecha: 2026-10-11. Versión: 20261006114613.
 
 Se descargó Vineflower 1.12.0 desde su release oficial y se verificó su SHA-256
 contra el digest publicado por GitHub. El manifiesto reproducible se conserva
-en tools/reverse/toolchain.json. Los ocho archivos del manifiesto congelado se
+en tools/reverse/toolchain.json. Los ocho archivos del manifiesto se
 verifican antes de descompilar o construir el índice.
 
 La descompilación terminó en 24 lotes, con 4.435 fuentes y navegación para las

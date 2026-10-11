@@ -2,7 +2,7 @@
 
 ## Causas y correcciones
 
-El cliente congelado detiene la predicción al recibir keyReleased, pero el
+El cliente detiene la predicción al recibir keyReleased, pero el
 controlador `com.threerings.tudey.a.a.ai(float)` interpola la posición visible
 hacia esa predicción con `1 - exp(20 * log(0.5) * dt)`: semivida de 50 ms.
 La imagen continúa desplazándose durante varios fotogramas aun con moving=false.
@@ -27,7 +27,7 @@ pulsa W cinco veces, suelta la tecla y observa cada fotograma durante al menos
 600 ms por ensayo. No modifica la velocidad ni inserta frames de protocolo.
 La línea inputClass confirma que el ensayo posterior cargó el overlay.
 
-El ensayo anterior antepone la clase original a.class, extraída del JAR congelado
+El ensayo anterior antepone la clase original a.class, extraída del JAR
 a `validation/baseline-client-classes`, mediante `measure-stop.ps1 -Baseline`.
 La comparación usa visualGap (distancia visible-predicción en el instante de
 soltar) y las coordenadas registradas. La columna forward del primer sondeo
@@ -50,7 +50,7 @@ detención en el escenario probado; no es una medida de latencia física de 0 ms
 
 Evidencia: `stop-before-client.log`, `stop-after-client.log`, logs de servidor
 correspondientes y `MeasureStop.java`. Los procesos usan sólo localhost:48024
-y la copia congelada independiente.
+y la copia independiente.
 
 ## Regresiones
 

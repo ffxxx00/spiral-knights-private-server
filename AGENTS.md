@@ -1,4 +1,7 @@
-# Emulador privado congelado
+# Servidor privado
+
+En documentación, mensajes y conversaciones, llamarlo simplemente «cliente».
+Mencionar versiones y hashes solo cuando sean relevantes para el procedimiento.
 
 Desarrollar exclusivamente dentro de esta carpeta. No leer ni modificar
 Steam/Spiral Knights ni online-container para ejecutar esta copia.
@@ -24,7 +27,7 @@ Consultar docs/REVERSE_MAP.md y tools/reverse/README.md antes de explorar un sis
 Usar tools/reverse/reverse.ps1 -Action Query para localizar clases, llamadas y campos.
 Fuentes e índice locales en analysis/client-20261006114613/; excluidos de Git.
 No repetir la descompilación completa si coinciden los hashes de la caché.
-Confirmar decisiones con javap y datos congelados: una fuente descompilada o una
+Confirmar decisiones con javap y datos: una fuente descompilada o una
 arista de llamada simbólica no demuestra comportamiento de servidor ni paridad.
 Registrar contrato, evidencia e incertidumbre antes de refactorizar cada sistema.
 Para combate, consultar docs/COMBAT_ACTION_AUDIT.md y el informe local

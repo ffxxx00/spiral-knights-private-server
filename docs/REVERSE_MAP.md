@@ -1,4 +1,4 @@
-# Mapa del cliente congelado y ruta de implementación
+# Mapa del cliente y ruta de implementación
 
 Versión de datos: **20261006114613**. Análisis: **2026-10-11**.
 
@@ -122,7 +122,7 @@ las consultas de contexto convierte cualquier escena en atravesable. `_maxStep`
 en cero también anulaba desplazamientos aunque el flag de caminar estuviera activo.
 
 Actor.e/gK/Nz permiten seguir máscara, flags y condiciones del actor. Los cubos
-usan su forma congelada; el emulador libera el paso al morir. Las balas tienen
+usan su forma; el emulador libera el paso al morir. Las balas tienen
 otra máscara: Polaris usa 137 frente a 43 del jugador. Una barrera baja no tiene
 por qué bloquear disparos. No convertir todas las colisiones en un mismo booleano.
 

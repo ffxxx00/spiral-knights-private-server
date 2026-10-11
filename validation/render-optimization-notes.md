@@ -5,7 +5,7 @@ Intel HD Graphics Gen11. Se conservaron las preferencias gráficas existentes.
 
 ## Causas verificadas
 
-El director Tudey de la biblioteca congelada dedica 50 ms a cada una de cuatro
+El director Tudey de la biblioteca dedica 50 ms a cada una de cuatro
 etapas de precarga. `director-bytecode.txt` confirma `tick(float)`, `acF()`,
 `acG()` y `acH()`, todas referenciando la misma constante long.
 JFR y los logs de GC también registraron llamadas explícitas a System.gc() con
@@ -22,7 +22,7 @@ pausas completas de 111–217 ms; el máximo de todas las pausas fue 219,80 ms.
 ## Comparación
 
 Los dos sondeos comparativos usaron el mismo JDK incluido (Temurin 25.0.3),
-cliente congelado, perfil, servidor y visita a Training Hall. El runtime habitual
+cliente, perfil, servidor y visita a Training Hall. El runtime habitual
 del cliente (Java 25.0.1 reducido) no contiene JFR. Un sondeo separado con ese
 runtime registró Haven y la primera ventana de Training Hall con telemetría
 gráfica y logs de GC; ese sondeo se interrumpió antes de completar 70 segundos.
@@ -51,7 +51,7 @@ estas tres cambian exactamente un operando; todos sus demás bytes permanecen
 intactos (`test-frozen-overlay.log`). También comprueba por separado el ajuste
 posterior del suavizado del personaje local, documentado en
 `stop-movement-notes.md`. El generador rechaza contratos distintos.
-Las bibliotecas congeladas no se modificaron.
+Las bibliotecas no se modificaron.
 
 Prueba integral final, después del ajuste de detención: `test-stop-movement.log`
 y `test-stop-movement-overlay.log`. La versión anterior del lanzador

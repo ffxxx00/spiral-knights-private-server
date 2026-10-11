@@ -1,4 +1,4 @@
-# Auditoría de acciones del arsenal congelado
+# Auditoría de acciones del arsenal
 
 Versión 20261006114613. Análisis: 2026-10-11.
 

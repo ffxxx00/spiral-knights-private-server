@@ -137,7 +137,7 @@ def normalize(source: Path, output: Path):
     output.mkdir(parents=True, exist_ok=True)
     manifest = {"schema": 1, "source_sha256": source_hash, "source_name": source_name, "local_source": local_source.name,
                 "capture_client_version": None, "capture_client_sha256": None,
-                "frozen_target": "20261006114613", "events": dict(counts), "markers": dict(flags),
+                "client_target": "20261006114613", "events": dict(counts), "markers": dict(flags),
                 "recording_start": start, "recording_end": end, "cases": []}
     for segment in segments:
         raw_count = len(segment["inputs"])

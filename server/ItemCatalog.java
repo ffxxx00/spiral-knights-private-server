@@ -18,7 +18,7 @@ public class ItemCatalog {
 
     static {
         try {
-            // Current live client mapping: VA() reads the frozen client per-instance id from bvX.
+            // Current live client mapping: VA() reads the client per-instance id from bvX.
             itemIdField = Item.class.getDeclaredField("bvX");
             itemIdField.setAccessible(true);
             levelField = LevelItem.class.getDeclaredField("_level");
@@ -31,7 +31,7 @@ public class ItemCatalog {
     public static LevelItem createItem(long id, String configPath, int level, InstalledConfigManager manager) {
         try {
             ItemConfig config=manager.d(ItemConfig.class,configPath);
-            if(config==null)throw new IllegalArgumentException("Missing frozen item "+configPath);
+            if(config==null)throw new IllegalArgumentException("Missing client item "+configPath);
             // The constructor takes the catalog config ID, not the instance ID.
             LevelItem item = new LevelItem(config.getConfigId(), new ConfigReference<ItemConfig>(configPath));
             if (itemIdField != null) {
@@ -53,7 +53,7 @@ public class ItemCatalog {
         long currentId = 1000L;
 
         // 1. Equipped Items:
-        // Frozen ItemCodes.Group: HELM=0, ARMOR=1, SHIELD=2.
+        // Client ItemCodes.Group: HELM=0, ARMOR=1, SHIELD=2.
         LevelItem armor = createItem(currentId++, "Gear/Armor/Chaos Cloak", 10, manager);
         allItems.add(armor);
         po.equipment[1] = armor.VA();

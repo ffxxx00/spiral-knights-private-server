@@ -12,7 +12,7 @@ import com.threerings.tudey.data.TudeySceneModel;
 import com.threerings.tudey.data.actor.Actor;
 import com.threerings.tudey.dobj.ActorDelta;
 
-/** Deterministic regressions against the actual frozen combat catalogs. */
+/** Deterministic regressions against the actual client combat catalogs. */
 public final class TestCombatSimulation {
     public static void main(String[] args) throws Exception {
         DObjectManager objects=new DObjectManager();
@@ -35,7 +35,7 @@ public final class TestCombatSimulation {
             checkNativeControls(scene,player);
             checkSwordCharges(scene,player);
         }
-        System.out.println("FROZEN VANILLA COMBAT SIMULATION TEST PASSED");
+        System.out.println("VANILLA COMBAT SIMULATION TEST PASSED");
     }
 
     private static void checkMelee(SceneManager scene,PlayerObject player) {
@@ -145,7 +145,7 @@ public final class TestCombatSimulation {
         pawn.aU(0,1);
         VanillaCombatController controller=new VanillaCombatController(scene,player,pawn,1);
         controller.input(new DungeonInputFrame(21,0f,0f,4,21));
-        check(pawn.adU()==292,"Frozen primary state machine did not start attack");
+        check(pawn.adU()==292,"Client primary state machine did not start attack");
         controller.input(new DungeonInputFrame(41,0f,0f,DungeonInputFrame.au(0,2),41));
         check(pawn.Ri().Mv().getName().equals("Weapon/Sword/Leviathan Blade"),"Weapon switch bypassed native recovery");
         for (int time=61;time<=1001;time+=20) controller.input(new DungeonInputFrame(time,0f,0f,0,41));
@@ -180,7 +180,7 @@ public final class TestCombatSimulation {
             if(original instanceof com.threerings.projectx.item.config.ItemConfig.Sword
                     || original instanceof com.threerings.projectx.item.config.ItemConfig.Handgun
                     || original instanceof com.threerings.projectx.item.config.ItemConfig.Bomb)
-                check(names.contains(entry.getName()),"Frozen weapon missing: "+entry.getName());
+                check(names.contains(entry.getName()),"Client weapon missing: "+entry.getName());
         }
         long helmet=player.equipment[0],armor=player.equipment[1];
         check(scene.resolveItemConfig(findItem(player,helmet)) instanceof com.threerings.projectx.item.config.ItemConfig.Helm,"Helmet slot reversed");
@@ -222,13 +222,13 @@ public final class TestCombatSimulation {
             float y=id==1?SceneManager.HAVEN_SPAWN_Y:SceneManager.TRAINING_SPAWN_Y;
             Actor pawn=scene.createPlayerKnight(player,1,id,x,y);
             TudeySceneModel model=scene.getSceneModel(id);
-            check(!model.a(pawn,collisionShape(pawn,model)),"Spawn intersects frozen map: "+id);
+            check(!model.a(pawn,collisionShape(pawn,model)),"Spawn intersects client map: "+id);
             float blockedX=x;
             for(int step=1;step<=800;step++) {
                 pawn.tz().s(x+step*0.1f,y);
                 if(model.a(pawn,collisionShape(pawn,model))) { blockedX=pawn.tz().x;break; }
             }
-            check(blockedX>x,"No frozen map wall found on test ray: "+id);
+            check(blockedX>x,"No client map wall found on test ray: "+id);
             if(id==294)trainingWall=blockedX;
             pawn.tz().s(x,y);
             scene.getCollision(id).move(pawn,blockedX+2,y);
@@ -290,7 +290,7 @@ public final class TestCombatSimulation {
                 wallHit=true;break;
             }
         }
-        check(wallHit,"Projectile crossed frozen wall or only expired at fuse time");
+        check(wallHit,"Projectile crossed client wall or only expired at fuse time");
         System.out.println("[CombatTest] Haven/Training walls, native movement, live/dead enemy and projectile collision passed");
     }
 
@@ -349,7 +349,7 @@ public final class TestCombatSimulation {
     }
     private static Monster firstTarget(CombatWorld world) {
         Map<Integer,Actor> snapshot=world.snapshot(1);
-        check(snapshot.size()==11,"Frozen training target count changed");
+        check(snapshot.size()==11,"Client training target count changed");
         return (Monster)snapshot.values().iterator().next();
     }
     private static Dungeoneer pawn(SceneManager scene,PlayerObject player,Monster target,float distance) {

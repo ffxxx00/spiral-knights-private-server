@@ -269,7 +269,7 @@ public class ClientSession implements Runnable {
         this.playerObject.objectives = new DSet<>();
         this.playerObject.memories = new DSet<>();
         this.playerObject.completedMissions = new DSet<>();
-        // OptionsDialog in the frozen client reads per-player preference values.
+        // OptionsDialog in the client reads per-player preference values.
         // An empty set lets PlayerObject apply the client's built-in defaults.
         this.playerObject.prefs = new DSet<>();
         this.playerObject.expansions = Sets.newHashSet();
@@ -608,7 +608,7 @@ public class ClientSession implements Runnable {
                     InvocationMarshaller.ListenerMarshaller lm = (InvocationMarshaller.ListenerMarshaller)arg;
                     short reqId = lm.requestId;
 
-                    // Frozen ItemMarshaller method 9: move item to location/slot.
+                    // Client ItemMarshaller method 9: move item to location/slot.
                     if (invCode == ITEM_SERVICE_CODE && methodId == 9) {
                         try {
                             moveEquipment(((Number)args[0]).longValue(),
@@ -1528,7 +1528,7 @@ public class ClientSession implements Runnable {
     }
 
     private void handlePing(PingRequest req) throws Exception {
-        // The sender's pack stamp is transient. The frozen client's readObject
+        // The sender's pack stamp is transient. The client's readObject
         // records the server receive time in ym(), used to measure process delay.
         PongResponse pong = new PongResponse(req.ym(), req.xK());
         sendMessage(pong);

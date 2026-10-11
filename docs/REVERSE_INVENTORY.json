@@ -1,5 +1,5 @@
 {
-  "frozen_version": "20261006114613",
+  "client_version": "20261006114613",
   "primary_jar": {
     "path": "code/projectx-pcode.jar",
     "sha256": "391a51cef0446f55d461bdb8f942ca9dba44e6e4138acdcd69ab2024297f543c",

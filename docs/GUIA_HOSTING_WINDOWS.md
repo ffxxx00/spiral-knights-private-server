@@ -1,6 +1,6 @@
 # Guía para alojar el servidor en una PC con Windows
 
-Cliente congelado **20261006114613**. Revisión: **10 de octubre de 2026**.
+Cliente **20261006114613**. Revisión: **10 de octubre de 2026**.
 
 ## 1. Qué necesitás
 

@@ -6,7 +6,7 @@ Se verificaron los hashes de ocho archivos originales. Sus fuentes y licencias
 permanecen locales en analysis/upstream/clyde/. No se añadieron al runtime.
 
 La comparación usa campos públicos de instancia de cuatro familias de configuración
-y los campos/descriptores del bytecode congelado. El scanner de Java es limitado:
+y los campos/descriptores del bytecode. El scanner de Java es limitado:
 esto identifica diferencias de esquema, no demuestra compatibilidad binaria,
 de comportamiento ni una compilación completa del servidor original.
 
@@ -22,7 +22,7 @@ de comportamiento ni una compilación completa del servidor original.
 ActionLogic, ConditionLogic, ExpressionLogic y HandlerLogic aportan referencias
 de semántica para acciones comunes. Primero contrastar las clases concretas y
 sus dependencias; después adaptar un contrato pequeño y comprobarlo con casos
-controlados. No sustituir el JAR congelado por una biblioteca moderna.
+controlados. No sustituir el JAR por una biblioteca moderna.
 
 Las extensiones ProjectX de daño, estados, IA y progresión siguen requiriendo
 reconstrucción a partir del cliente, catálogos y resultados observados.

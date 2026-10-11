@@ -9,7 +9,7 @@ import java.util.jar.JarFile;
 import java.util.Map;
 import java.util.Arrays;
 
-/** Generates a local class overlay while preserving the frozen JAR byte-for-byte. */
+/** Generates a local class overlay while preserving the client JAR byte-for-byte. */
 public final class BuildLocalClient {
     private enum Patch { INTERVAL, PRELOAD, LOCAL_PAWN }
     public static void main(String[] args) throws Exception {
@@ -21,7 +21,7 @@ public final class BuildLocalClient {
         patchInterval(args[0], args[1], "com/threerings/projectx/dungeon/data/LevelSceneConfig.class", 33, interval);
         patchClass(args[0], args[1], "com/threerings/tudey/a/i.class", 50, preloadBudget, Patch.PRELOAD);
         patchClass(args[0], args[1], "com/threerings/tudey/a/a.class", 0, 0, Patch.LOCAL_PAWN);
-        System.out.println("[LOCAL] Client input interval=" + interval + "ms; frozen JAR unchanged");
+        System.out.println("[LOCAL] Client input interval=" + interval + "ms; client JAR unchanged");
         System.out.println("[LOCAL] Scene preload budget=" + preloadBudget + "ms per stage");
         System.out.println("[LOCAL] Local pawn uses predicted position immediately; visual easing removed");
     }
@@ -82,13 +82,13 @@ public final class BuildLocalClient {
                     // stack maps, serialization, constructors and every other method.
                     if ((access & 1) == 0 || codeLength != 3 || bytes[offset] != 0x10
                             || bytes[offset+1] != originalInterval || (bytes[offset+2] & 255) != 0xac) {
-                        throw new IllegalStateException("Frozen CU() contract changed; refusing overlay");
+                        throw new IllegalStateException("Client CU() contract changed; refusing overlay");
                     }
                     bytes[offset+1] = (byte)interval; patched++;
                 }
                 if (patch == Patch.LOCAL_PAWN && name.equals("ai") && descriptor.equals("(F)V") && kind.equals("Code")) {
                     buffer.getInt(); int codeLength = buffer.getInt(), offset = buffer.position();
-                    // Frozen ai(float), offsets 397..429: render the controlled pawn
+                    // Client ai(float), offsets 397..429: render the controlled pawn
                     // toward bOJ's predicted position with alpha=1-exp(bOR*dt).
                     // Keep prediction, key flags, speed and reconciliation unchanged.
                     byte[] tail = {
@@ -98,7 +98,7 @@ public final class BuildLocalClient {
                         (byte)0xb6, 0x00, (byte)0x99, 0x57, (byte)0xb1
                     };
                     if (codeLength != 430 || !Arrays.equals(tail, Arrays.copyOfRange(bytes,offset+397,offset+430))) {
-                        throw new IllegalStateException("Frozen local pawn easing contract changed; refusing overlay");
+                        throw new IllegalStateException("Client local pawn easing contract changed; refusing overlay");
                     }
                     // Retain fconst_1 (alpha=1) and replace the remaining expression
                     // with nops. Instruction offsets and stack maps remain valid.
@@ -106,7 +106,7 @@ public final class BuildLocalClient {
                     patched++;
                 }
                 if (loading && kind.equals("Code")) {
-                    // The frozen director shares one long 50 across exactly
+                    // The client director shares one long 50 across exactly
                     // these four verified resource-loading stages. No gameplay
                     // clock, input, simulation or animation method is changed.
                     Map<String, Integer> sites = Map.of("tick(F)V",21,"acF()F",80,"acG()F",52,"acH()F",64);
@@ -115,7 +115,7 @@ public final class BuildLocalClient {
                         buffer.getInt(); int codeLength = buffer.getInt(), offset = buffer.position();
                         if (budgetConstant < 0 || codeLength < site+3 || (bytes[offset+site] & 255) != 0x14
                                 || buffer.getShort(offset+site+1) != budgetConstant) {
-                            throw new IllegalStateException("Frozen preload contract changed: " + name);
+                            throw new IllegalStateException("Client preload contract changed: " + name);
                         }
                         patched++;
                     }
@@ -123,7 +123,7 @@ public final class BuildLocalClient {
                 buffer.position(start+length);
             }
         }
-        if (patched != (loading ? 4 : 1)) throw new IllegalStateException("Unexpected number of frozen patch sites: " + patched);
+        if (patched != (loading ? 4 : 1)) throw new IllegalStateException("Unexpected number of client patch sites: " + patched);
         if (loading) buffer.putLong(budgetOffset, interval);
         Path output = Path.of(outputDirectory).resolve(entry);
         Files.createDirectories(output.getParent()); Files.write(output, bytes);

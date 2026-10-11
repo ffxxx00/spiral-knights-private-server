@@ -24,7 +24,7 @@ class TelemetryTests(unittest.TestCase):
         self.assertEqual(fields["ActionConfig$Child"], {"actor": "ConfigReference", "text": "String"})
     def experiment(self):
         return {"case_id": "controlled", "input_sha256": "inputs", "initial_state_sha256": "initial",
-                "client_sha256": "frozen", "samples": [{"time_ms": 100, "actors": [
+                "client_sha256": "client", "samples": [{"time_ms": 100, "actors": [
                     {"id": "enemy-1", "position": {"x": 1.0, "y": 2.0}, "health": 0.8}]}]}
 
     def test_comparison_detects_position_health_spawn_and_time(self):

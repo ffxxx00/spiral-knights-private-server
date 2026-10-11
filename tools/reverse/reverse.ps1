@@ -17,7 +17,7 @@ function Check-FrozenInputs {
     foreach($record in $data.files) {
         $file=Join-Path $taskRoot $record.path
         if((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $record.sha256) {
-            throw "Frozen input changed: $($record.path). Analysis aborted."
+            throw "Client input changed: $($record.path). Analysis aborted."
         }
     }
 }

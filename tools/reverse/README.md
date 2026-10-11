@@ -1,4 +1,4 @@
-# Herramientas de análisis de la copia congelada
+# Herramientas de análisis de la copia
 
 Vineflower 1.12.0 se descarga desde su release oficial, con SHA-256 fijado en
 toolchain.json. Se usa el JDK propio del proyecto. Ghidra no es necesario para

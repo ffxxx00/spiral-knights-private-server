@@ -35,7 +35,7 @@ public final class InstalledConfigManager extends ConfigManager {
         T[] configs;
         try (FileInputStream input = new FileInputStream(path)) {
             Object installed = new BinaryImporter(input).qe();
-            // Some frozen catalogs (notably fire_action.dat) use the newer
+            // Some client catalogs (notably fire_action.dat) use the newer
             // ConfigGroup.Data envelope instead of a bare typed array.
             configs = (T[])(installed instanceof ConfigGroup.Data
                 ? ((ConfigGroup.Data)installed).array : installed);
@@ -56,7 +56,7 @@ public final class InstalledConfigManager extends ConfigManager {
 
     private static void restoreRegionContainers(ManagedConfig config) throws Exception {
         if (!(config instanceof ParameterizedConfig)) return;
-        // A few frozen server-action templates import a Default region despite
+        // A few client server-action templates import a Default region despite
         // exporting parameter paths for a concrete shape. Reconstruct only the
         // container explicitly specified by those paths, before native binding.
         List<Parameter.Direct> directs=new ArrayList<>();

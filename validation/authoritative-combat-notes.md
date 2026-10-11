@@ -1,11 +1,11 @@
 # Combate autoritativo — 2026-10-11
 
-Datos congelados: 20261006114613. Desarrollo exclusivo en Spiral Knights Private.
+Versión de datos: 20261006114613. Desarrollo exclusivo en Spiral Knights Private.
 
 Se sustituyeron los temporizadores manuales de combate por el controlador
 `com.threerings.projectx.dungeon.util.i` instalado. Gobierna ataques, cadenas,
 carga, recuperación, cambio de arma, defensa, bash y esquiva. La geometría,
-ataques, proyectiles, mechas y daño proceden de los catálogos congelados.
+ataques, proyectiles, mechas y daño proceden de los catálogos.
 
 CombatWorld simula una escena compartida: 11 Training Cubes del mapa, salud,
 impactos, muerte, reaparición, balas, bombas y temporizadores básicos. La fórmula
@@ -30,7 +30,7 @@ los catálogos ni los JAR.
 - Dos clientes TCP: mismo cubo, misma vida e instante de muerte; salida del amigo.
 - Login, inventario/modelo, Haven, Training y regreso, controles, ACK atómico,
   continuidad de deltas, cadencia de reloj compartido y keepalive.
-- docs/verificar-copia.ps1: ocho hashes congelados aprobados.
+- docs/verificar-copia.ps1: ocho hashes aprobados.
 - Manual HTML y ZIP regenerados, enlaces y estructura verificados.
 
 Registro vigente: test-authoritative-combat.log. La cadencia se mide contra el

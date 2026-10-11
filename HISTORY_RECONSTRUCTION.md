@@ -13,7 +13,7 @@ Los siguientes agrupan fuentes actuales por funcion, sin pretender reproducir
 cada cambio intermedio ni el orden exacto de todo el desarrollo.
 
 Los commits historicos pueden carecer de auxiliares o ser incompatibles con
-la biblioteca congelada. No se declara que cada commit historico compile ni
+la biblioteca. No se declara que cada commit historico compile ni
 pase las pruebas. Para trabajar, usar el ultimo commit y los recursos indicados
 en README_GITHUB.md. La reconstruccion no modifico fuentes ni archivos del juego.
 
@@ -21,9 +21,9 @@ en README_GITHUB.md. La reconstruccion no modifico fuentes ni archivos del juego
 
 - `af18bd36f099` — reconstruct: importar servidor anterior a la adaptacion
 
-  Fuentes exactas de server-before-adaptation.zip. Es la primera copia disponible, no prueba de que sea la primera version creada. Puede no compilar con el cliente congelado.
+  Fuentes exactas de server-before-adaptation.zip. Es la primera copia disponible, no prueba de que sea la primera version creada. Puede no compilar con el cliente.
 
-- `0a602c5da5b7` — reconstruct: adaptar protocolo al cliente congelado
+- `0a602c5da5b7` — reconstruct: adaptar protocolo al cliente
 
   Entradas exactas de before-low-latency.zip. Estado previo a la baja latencia. Este respaldo no contiene todos los archivos necesarios para ejecutar el cliente.
 

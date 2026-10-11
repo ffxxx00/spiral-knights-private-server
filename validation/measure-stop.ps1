@@ -30,7 +30,7 @@ $localMode = -not $NetworkMode -and $ServerHost -in @('localhost', '127.0.0.1', 
 $localClasses = Join-Path $gameRoot 'client-local/classes'
 
 if ($localMode) {
-    # Only the loopback launcher uses this overlay. The frozen JAR stays intact.
+    # Only the loopback launcher uses this overlay. The client JAR stays intact.
     $lockedBuild = Get-Content -LiteralPath (Join-Path $gameRoot 'frozen-version.json') -Raw | ConvertFrom-Json
     $lockedJar = $lockedBuild.files | Where-Object { $_.path -eq 'code/projectx-pcode.jar' }
     $jarPath = Join-Path $gameRoot 'code/projectx-pcode.jar'
@@ -39,7 +39,7 @@ if ($localMode) {
     try { $jarHash = [BitConverter]::ToString($hasher.ComputeHash($jarStream)).Replace('-', '') }
     finally { $jarStream.Dispose(); $hasher.Dispose() }
     if ($jarHash -ne $lockedJar.sha256) {
-        throw 'La biblioteca congelada cambio. No se puede aplicar el modo local.'
+        throw 'La biblioteca del cliente cambió. No se puede aplicar el modo local.'
     }
     $serverSettings = Get-Content -LiteralPath (Join-Path $gameRoot 'server/server.properties') -Raw
     $intervalMatch = [regex]::Match($serverSettings, '(?m)^movement\.deltaIntervalMs\s*=\s*(\d+)')
@@ -138,7 +138,7 @@ Write-Host "Modo local de baja latencia: $localMode" -ForegroundColor Green
 
 [IO.Directory]::CreateDirectory((Join-Path $gameRoot 'profile')) | Out-Null
 # ProjectXApp.Ha() starts Getdown when this marker is absent. All resources
-# are already installed in the frozen copy; create it before the first launch.
+# are already installed in the client copy; create it before the first launch.
 $fullDataMarker = Join-Path $gameRoot 'full.dat'
 if (-not (Test-Path -LiteralPath $fullDataMarker)) {
     [IO.File]::WriteAllBytes($fullDataMarker, [byte[]]@())

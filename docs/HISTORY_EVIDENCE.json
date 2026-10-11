@@ -485,11 +485,11 @@
     {
       "sha": "af18bd36f09924841c9f42706b23259794a5cc33",
       "title": "reconstruct: importar servidor anterior a la adaptacion",
-      "evidence": "Fuentes exactas de server-before-adaptation.zip. Es la primera copia disponible,\nno prueba de que sea la primera version creada. Puede no compilar con el cliente congelado."
+      "evidence": "Fuentes exactas de server-before-adaptation.zip. Es la primera copia disponible,\nno prueba de que sea la primera version creada. Puede no compilar con el cliente."
     },
     {
       "sha": "0a602c5da5b74d762806ade13635ed81187588d9",
-      "title": "reconstruct: adaptar protocolo al cliente congelado",
+      "title": "reconstruct: adaptar protocolo al cliente",
       "evidence": "Entradas exactas de before-low-latency.zip. Estado previo a la baja latencia.\nEste respaldo no contiene todos los archivos necesarios para ejecutar el cliente."
     },
     {

@@ -5,7 +5,7 @@ al inicializar el backend de memoria de LWJGL con Java 25. El ajuste anterior
 `--sun-misc-unsafe-memory-access=allow` sólo desactivaba el aviso; fue retirado.
 
 El lanzador ahora selecciona `org.lwjgl.system.memoryBackend=ffm`. El JAR
-congelado ya contiene `MemoryBackendFFM` en META-INF/versions/25; no se descargó
+ya contiene `MemoryBackendFFM` en META-INF/versions/25; no se descargó
 ni actualizó ninguna biblioteca. Esta implementación usa java.lang.foreign
 para acceder a memoria nativa, en lugar de las operaciones sun.misc.Unsafe.
 Se conserva Java 25.0.1 y los avisos de la JVM permanecen habilitados.

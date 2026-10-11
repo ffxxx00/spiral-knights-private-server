@@ -171,8 +171,8 @@ def digest(path):
 
 
 def locations(root):
-    frozen = json.loads((root / "frozen-version.json").read_text(encoding="utf-8-sig"))
-    return frozen, root / "analysis" / f"client-{frozen['version']}"
+    client = json.loads((root / "frozen-version.json").read_text(encoding="utf-8-sig"))
+    return client, root / "analysis" / f"client-{client['version']}"
 
 
 def find_source(root, output, name):
@@ -206,10 +206,10 @@ def source_inventory(db, root, output, summary):
 
 def build(root, args):
     start = time.monotonic()
-    frozen, output = locations(root)
-    for record in frozen["files"]:
+    client, output = locations(root)
+    for record in client["files"]:
         if digest(root / record["path"]).lower() != record["sha256"].lower():
-            raise ValueError(f"Frozen input changed: {record['path']}")
+            raise ValueError(f"Client input changed: {record['path']}")
     output.mkdir(parents=True, exist_ok=True)
     db_path = output / "index.sqlite"
     script_hash = digest(Path(__file__))
@@ -231,7 +231,7 @@ def build(root, args):
     db = sqlite3.connect(temporary)
     db.executescript(DDL)
     db.execute("INSERT INTO meta VALUES('schema',?)", (str(SCHEMA_VERSION),))
-    db.execute("INSERT INTO meta VALUES('version',?)", (frozen["version"],))
+    db.execute("INSERT INTO meta VALUES('version',?)", (client["version"],))
     db.execute("INSERT INTO meta VALUES('indexer_sha256',?)", (script_hash,))
     artifacts = []
     for jar in sorted((root / "code").glob("*.jar")):
@@ -282,7 +282,7 @@ def build(root, args):
                 markers.append({"path": source.relative_to(root).as_posix(), "line": line_number, "message": line.strip()})
     primary_classes = db.execute("SELECT count(*) FROM classes WHERE jar='code/projectx-pcode.jar'").fetchone()[0]
     navigation = db.execute("SELECT count(*) FROM classes WHERE jar='code/projectx-pcode.jar' AND source IS NOT NULL").fetchone()[0]
-    summary = {"schema": SCHEMA_VERSION, "frozen_version": frozen["version"], "counts": counts,
+    summary = {"schema": SCHEMA_VERSION, "client_version": client["version"], "counts": counts,
                "primary_classes": primary_classes, "classes_with_source_navigation": navigation,
                "java_source_files": len(sources), "decompiler_error_markers": len(markers),
                "elapsed_seconds": round(time.monotonic() - start, 2), "jars": artifacts,

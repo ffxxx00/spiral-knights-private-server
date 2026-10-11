@@ -4,7 +4,7 @@ Referencia Clyde: 8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01. Las fuentes original
 están en analysis/upstream/clyde/<revision> y sus URLs/hashes en clyde-reference.json.
 Estos contratos describen esa revisión pública; no certifican la versión del
 servidor propietario de Spiral Knights. Los esquemas públicos de instancia de las
-clases comunes coinciden con el bytecode congelado, según la comparación inicial.
+clases comunes coinciden con el bytecode, según la comparación inicial.
 
 | Contrato | Semántica de la referencia | Requisito del adaptador |
 | --- | --- | --- |

@@ -100,7 +100,7 @@ Write-Host "Debug de protocolo: $($DebugProtocol.IsPresent)" -ForegroundColor Da
 
 [IO.Directory]::CreateDirectory((Join-Path $gameRoot 'profile')) | Out-Null
 # ProjectXApp.Ha() starts Getdown when this marker is absent. All resources
-# are already installed in the frozen copy; create it before the first launch.
+# are already installed in the client copy; create it before the first launch.
 $fullDataMarker = Join-Path $gameRoot 'full.dat'
 if (-not (Test-Path -LiteralPath $fullDataMarker)) {
     [IO.File]::WriteAllBytes($fullDataMarker, [byte[]]@())

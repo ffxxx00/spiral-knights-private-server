@@ -14,7 +14,7 @@ simulación de la misión.
 
 Se fijó Clyde en 8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01 y se verificaron SHA-256
 de Action/Condition/Expression/Handler Config y Logic. El scanner compara nombres
-y tipos de campos públicos de instancia con el índice del bytecode congelado.
+y tipos de campos públicos de instancia con el índice del bytecode.
 Resultado: 37, 20, 31 y 28 clases comunes respectivamente, sin diferencias de
 campos en esas clases. Action tiene además un enum y una interfaz del cliente
 fuera del conjunto de declaraciones de clase del scanner. Esto no verifica

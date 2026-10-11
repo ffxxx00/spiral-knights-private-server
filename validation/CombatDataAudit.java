@@ -11,7 +11,7 @@ import com.threerings.projectx.dungeon.config.*;
 import com.threerings.tudey.config.*;
 import com.threerings.tudey.data.TudeySceneModel;
 
-/** Read-only inventory of frozen combat actions, without an official connection. */
+/** Read-only inventory of client combat actions, without an official connection. */
 public class CombatDataAudit {
     static InstalledConfigManager configs = new InstalledConfigManager();
     static Set<Object> visited = Collections.newSetFromMap(new IdentityHashMap<>());

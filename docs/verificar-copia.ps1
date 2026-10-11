@@ -19,7 +19,7 @@ foreach ($item in $required) {
 $copyManifest = Get-Content -LiteralPath (Join-Path $copyRoot 'frozen-version.json') -Raw | ConvertFrom-Json
 if ($copyManifest.version -ne '20261006114613') { throw 'Esta guia requiere la version 20261006114613.' }
 $copyVersion = [IO.File]::ReadAllText((Join-Path $copyRoot 'getdown.txt'))
-if ($copyVersion -notmatch '(?m)^version\s*=\s*20261006114613\s*$') { throw 'getdown.txt no coincide con la version congelada.' }
+if ($copyVersion -notmatch '(?m)^version\s*=\s*20261006114613\s*$') { throw 'getdown.txt no coincide con la version.' }
 foreach ($item in $copyManifest.files) {
     $itemPath = Join-Path $copyRoot $item.path
     if (-not (Test-Path -LiteralPath $itemPath -PathType Leaf)) { throw "Falta: $($item.path)" }

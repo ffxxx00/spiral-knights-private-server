@@ -1,4 +1,4 @@
-"""Pinned upstream reference and public field compatibility against frozen bytecode.
+"""Pinned upstream reference and public field compatibility against client bytecode.
 
 This lightweight Java declaration scanner is not a compiler or a semantic proof.
 """
@@ -70,39 +70,39 @@ def check(root, download=False):
             upstream = declarations((directory / (family + "Config.java")).read_text(encoding="utf8"))
             rows = db.execute("SELECT c.name,f.name,f.descriptor FROM classes c JOIN fields f ON f.class_id=c.id WHERE c.jar=? AND c.name LIKE ? AND (f.access & 1)!=0 AND (f.access & 8)=0",
                               ("code/projectx-pcode.jar", "com.threerings.tudey.config." + family + "Config%"))
-            frozen = {}
+            client = {}
             for owner, name, descriptor in rows:
-                frozen.setdefault(owner.rsplit(".", 1)[-1], {})[name] = descriptor_type(descriptor)
+                client.setdefault(owner.rsplit(".", 1)[-1], {})[name] = descriptor_type(descriptor)
             # Include classes that declare no public fields.
             for (owner,) in db.execute("SELECT name FROM classes WHERE jar=? AND name LIKE ?",
                                        ("code/projectx-pcode.jar", "com.threerings.tudey.config." + family + "Config%")):
-                frozen.setdefault(owner.rsplit(".", 1)[-1], {})
-            common = set(upstream) & set(frozen)
+                client.setdefault(owner.rsplit(".", 1)[-1], {})
+            common = set(upstream) & set(client)
             changes = []
             for owner in sorted(common):
-                for field in sorted(set(upstream[owner]) | set(frozen[owner])):
-                    a, b = upstream[owner].get(field), frozen[owner].get(field)
+                for field in sorted(set(upstream[owner]) | set(client[owner])):
+                    a, b = upstream[owner].get(field), client[owner].get(field)
                     if a != b:
-                        changes.append({"class": owner, "field": field, "upstream": a, "frozen": b})
-            report["families"][family] = {"common_classes": len(common), "upstream_only": sorted(set(upstream) - set(frozen)),
-                                         "frozen_only": sorted(set(frozen) - set(upstream)), "field_differences": changes}
+                        changes.append({"class": owner, "field": field, "upstream": a, "client": b})
+            report["families"][family] = {"common_classes": len(common), "upstream_only": sorted(set(upstream) - set(client)),
+                                         "client_only": sorted(set(client) - set(upstream)), "field_differences": changes}
     (directory / "compatibility.json").write_text(json.dumps(report, indent=2), encoding="utf8")
     lines = ["# Evaluación inicial de Clyde/Tudey", "", f"Referencia fijada: `{lock['revision']}`.", "",
              "Se verificaron los hashes de ocho archivos originales. Sus fuentes y licencias",
              "permanecen locales en analysis/upstream/clyde/. No se añadieron al runtime.", "",
              "La comparación usa campos públicos de instancia de cuatro familias de configuración",
-             "y los campos/descriptores del bytecode congelado. El scanner de Java es limitado:",
+             "y los campos/descriptores del bytecode. El scanner de Java es limitado:",
              "esto identifica diferencias de esquema, no demuestra compatibilidad binaria,",
              "de comportamiento ni una compilación completa del servidor original.", "",
              "| Familia | Clases comunes | Solo upstream | Solo cliente | Diferencias de campos |",
              "| --- | ---: | ---: | ---: | ---: |"]
     for family, data in report["families"].items():
-        lines.append(f"| {family} | {data['common_classes']} | {len(data['upstream_only'])} | {len(data['frozen_only'])} | {len(data['field_differences'])} |")
+        lines.append(f"| {family} | {data['common_classes']} | {len(data['upstream_only'])} | {len(data['client_only'])} | {len(data['field_differences'])} |")
     lines += ["", "## Uso previsto", "",
               "ActionLogic, ConditionLogic, ExpressionLogic y HandlerLogic aportan referencias",
               "de semántica para acciones comunes. Primero contrastar las clases concretas y",
               "sus dependencias; después adaptar un contrato pequeño y comprobarlo con casos",
-              "controlados. No sustituir el JAR congelado por una biblioteca moderna.", "",
+              "controlados. No sustituir el JAR por una biblioteca moderna.", "",
               "Las extensiones ProjectX de daño, estados, IA y progresión siguen requiriendo",
               "reconstrucción a partir del cliente, catálogos y resultados observados.", "",
               "Consultar el detalle local compatibility.json antes de escoger una familia.",

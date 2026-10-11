@@ -1,6 +1,6 @@
 # Baja latencia comprobada el 9 de octubre de 2026
 
-Todos los sondeos utilizaron exclusivamente la copia privada congelada.
+Todos los sondeos utilizaron exclusivamente la copia privada.
 El sondeo gráfico ejecutó el cliente real, midió su reloj de render y FPS,
 y solicitó Training Hall mediante el SceneDirector original. Su duración es
 90 segundos; el sondeo se cierra solo. No modifica el comportamiento de juego.

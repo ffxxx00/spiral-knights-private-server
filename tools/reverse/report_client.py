@@ -5,15 +5,15 @@ from pathlib import Path
 import sqlite3
 
 root = Path(__file__).resolve().parents[2]
-frozen = json.loads((root / "frozen-version.json").read_text(encoding="utf-8-sig"))
-output = root / "analysis" / f"client-{frozen['version']}"
+client = json.loads((root / "frozen-version.json").read_text(encoding="utf-8-sig"))
+output = root / "analysis" / f"client-{client['version']}"
 inventory = json.loads((output / "inventory.json").read_text())
 db = sqlite3.connect((output / "index.sqlite").as_uri() + "?mode=ro", uri=True)
 classes = [row[0] for row in db.execute("SELECT name FROM classes WHERE jar='code/projectx-pcode.jar'")]
 game = collections.Counter(name.split(".")[3] for name in classes if name.startswith("com.threerings.projectx."))
 engine = collections.Counter(".".join(name.split(".")[:3]) for name in classes if not name.startswith("com.threerings.projectx."))
 report = {
-    "frozen_version": frozen["version"],
+    "client_version": client["version"],
     "primary_jar": next(item for item in inventory["jars"] if item["path"] == "code/projectx-pcode.jar"),
     "tool": json.loads((root / "tools/reverse/toolchain.json").read_text())["vineflower"],
     "counts": inventory["counts"],

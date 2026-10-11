@@ -1,4 +1,4 @@
-# Combate en la copia congelada
+# Combate en la copia
 
 Revisión: **2026-10-11**. Datos: **20261006114613**.
 
@@ -11,7 +11,7 @@ El Training Hall ahora tiene daño autoritativo contra los **11 cubos originales
 3. Atacar con Leviathan Blade. El golpe requiere alcance y orientación correctos y ocurre en el momento de impacto del ataque.
 4. Elegir Polaris y disparar hacia un cubo: el daño llega cuando el proyectil lo toca.
 5. Elegir Ash of Agni, mantener ataque hasta completar la carga y soltarlo junto a un cubo. La bomba explota después de su mecha y aplica el daño del área configurada.
-6. Esperar la reaparición del cubo, cuyo tiempo procede del mapa congelado.
+6. Esperar la reaparición del cubo, cuyo tiempo procede del mapa.
 7. Elegir Combuster, mantener ataque hasta completar la carga y soltar: genera
    la onda y cinco explosiones secundarias, con color, forma y daño del arma.
 
@@ -68,7 +68,7 @@ La simulación no sustituye una comparación visual cuadro por cuadro con vanill
 
 `CombatWorld` pertenece a la escena y se actualiza una vez por tick; todas las sesiones reciben actores de la misma simulación. `VanillaCombatController` reutiliza el controlador instalado. `ClientSession` conserva la captura conjunta del estado y su input confirmado.
 
-`InstalledConfigManager` admite ConfigGroup.Data y restaura en memoria los contenedores de región/señal indicados por los parámetros exportados. Esto permite aplicar las formas originales que se importaban como regiones vacías. No modifica los archivos congelados.
+`InstalledConfigManager` admite ConfigGroup.Data y restaura en memoria los contenedores de región/señal indicados por los parámetros exportados. Esto permite aplicar las formas originales que se importaban como regiones vacías. No modifica los archivos.
 
 El combate y el equipo viven en memoria. Reiniciar el servidor restablece los
 actores y reconectar restablece el inventario/equipo inicial; no hay progreso

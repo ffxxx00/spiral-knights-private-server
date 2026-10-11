@@ -1,4 +1,4 @@
-# Spiral Knights Private — versión congelada
+# Spiral Knights Private
 
 **El repositorio Git contiene fuentes y documentación; no descarga el juego ni
 Java.** Para preparar un checkout, consultar [README_GITHUB.md](README_GITHUB.md).
@@ -47,7 +47,7 @@ se elimina el avance visual residual producido por el suavizado original.
 La velocidad de movimiento permanece en 5 unidades/s.
 
 Los ajustes del cliente viven en `client-local/`: el lanzador genera un overlay
-de clases a partir de la biblioteca congelada y comprueba su SHA-256. No cambia
+de clases a partir de la biblioteca y comprueba su SHA-256. No cambia
 los JAR, recursos, velocidad del personaje ni controles. Para usar la política
 original del cliente en loopback: `launch_client.bat localhost 47624 HeroKnight -NetworkMode`.
 En conexiones LAN/VPN se conserva automáticamente el buffer original.
@@ -63,7 +63,7 @@ para reducir tirones. Se conservan los recursos completos y la calidad gráfica
 seleccionada por el usuario. Mediciones en `validation/render-optimization-notes.md`.
 
 Los lanzadores resuelven todo desde su propia carpeta, incluidos Java y JDK.
-El cliente utiliza el backend FFM incluido en el LWJGL congelado
+El cliente utiliza el backend FFM incluido en el LWJGL
 (`org.lwjgl.system.memoryBackend=ffm`). Reemplaza los accesos obsoletos de memoria
 sun.misc.Unsafe por java.lang.foreign de Java 25. Los avisos siguen habilitados.
 Puedes mover la carpeta completa. `profile/preferences` contiene las opciones
@@ -78,13 +78,13 @@ local de versión; no tiene un origen de actualización oficial.
 ## Adaptación comprobada el 9 de octubre de 2026
 
 Se actualizaron los nombres de métodos y campos del emulador contra la biblioteca
-congelada, incluida la serialización, objetos y RPC, actores, input, inventario,
+del cliente, incluida la serialización, objetos y RPC, actores, input, inventario,
 configuración de escenas, puertas, preferencias del jugador y tiempos de keepalive. Se conservó el protocolo
 y el comportamiento del emulador.
 
 `test_server.bat` compila y termina con
 `PRIVATE SERVER WORLD-ENTRY PROTOCOL TEST PASSED`.
-La prueba cubre autenticación con la versión congelada, inventario y modelo,
+La prueba cubre autenticación con la versión, inventario y modelo,
 Haven, movimiento a velocidad 5.0 y rotación, ida y vuelta al Training Hall,
 armas, ataque, carga, defensa, esquiva y shield bash, sincronización de dos
 clientes, cadena y cadencia de deltas y keepalive con timestamps válidos.
@@ -97,20 +97,20 @@ no representan el estado actual.
 El Training Hall incorpora daño real contra sus 11 cubos originales, con espada,
 proyectil de Polaris y bomba cargada de Ash of Agni. El controlador original gobierna
 combos, carga, recuperación y controles. `test_server.bat` también ejecuta
-`FROZEN VANILLA COMBAT SIMULATION TEST PASSED`; evidencia en
+`VANILLA COMBAT SIMULATION TEST PASSED`; evidencia en
 `validation/test-authoritative-combat.log`. Ver [combate vanilla](docs/COMBATE_VANILLA.md).
 Todavía faltan estados alterados, IA, daño al jugador, reacciones, autoapuntado,
 desniveles y validación de todas las armas para afirmar paridad 1:1.
 No hay progreso persistente.
 El arsenal local reúne las 374 espadas, pistolas y bombas creables del catálogo
-congelado, a nivel 10, más cinco piezas de equipo. El rango máximo es 10-3,
+del cliente, a nivel 10, más cinco piezas de equipo. El rango máximo es 10-3,
 con los permisos nativos de equipo de 2 a 5 estrellas habilitados.
 Se pueden equipar y desequipar desde el cliente; yelmo y armadura usan sus ranuras
 originales y el modelo de combate evita duplicar el escudo y el arma del sprite.
 Combuster cargada genera cinco explosiones secundarias con daño real. La cadencia
 de esa ráfaga usa compatibilidad local de 100 ms y aún necesita comparación vanilla.
 Verificación actual: `validation/test-training-equipment.log`.
-El movimiento resuelve paredes, tiles y objetos del mapa congelado en Haven y
+El movimiento resuelve paredes, tiles y objetos del mapa en Haven y
 Training Hall, y las formas de los cubos vivos. Los cubos muertos dejan de bloquear.
 Las balas usan su propia máscara de colisión y se detienen contra las paredes
 que les corresponden; una barrera baja puede bloquear al jugador y permitir disparos.

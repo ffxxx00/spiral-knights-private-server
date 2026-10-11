@@ -1,4 +1,4 @@
-# Compatibilidad con la versión congelada 20261006114613
+# Compatibilidad con la versión 20261006114613
 
 Las firmas y bytecodes en esta carpeta se extrajeron exclusivamente con el
 javap incluido y code/projectx-pcode.jar de esta copia. Las bibliotecas no se
@@ -28,7 +28,7 @@ Contratos comprobados:
 - ProjectXApp.Ha() omite Getdown si ya existe full.dat. El lanzador crea ese
   marcador antes de la primera ejecución, puesto que se copiaron todos los assets.
 
-La prueba integral usa la versión exacta congelada y distingue posición,
+La prueba integral usa la versión exacta y distingue posición,
 rotación, actividad y tiempos, además de probar el flujo completo y dos clientes.
 La prueba gráfica conectó a localhost:48024, recibió Haven, inició el estado
 Tudey y emitió input. Los ticks observados se mantuvieron en 10 Hz. Ver

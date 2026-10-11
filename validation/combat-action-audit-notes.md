@@ -1,6 +1,6 @@
 # Auditoría de contratos del arsenal — 2026-10-11
 
-La herramienta InspectCombatCatalog importa los catálogos congelados mediante
+La herramienta InspectCombatCatalog importa los catálogos mediante
 InstalledConfigManager. Recorre las 374 armas creables y sigue referencias tipadas
 de ataques, acciones de fuego, actores, condiciones de estado y handlers. No abre
 sockets ni ejecuta simulación. Las clases de análisis se compilan en analysis/,

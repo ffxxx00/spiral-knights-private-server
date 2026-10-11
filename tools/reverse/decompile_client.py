@@ -13,9 +13,9 @@ parser.add_argument("--force", action="store_true")
 parser.add_argument("--batch-size", type=int, default=350)
 args = parser.parse_args()
 if not 50 <= args.batch_size <= 1000: parser.error("batch-size must be 50..1000")
-frozen = json.loads((root / "frozen-version.json").read_text(encoding="utf-8-sig"))
+client = json.loads((root / "frozen-version.json").read_text(encoding="utf-8-sig"))
 tool = json.loads((root / "tools/reverse/toolchain.json").read_text())["vineflower"]
-output = root / "analysis" / f"client-{frozen['version']}"
+output = root / "analysis" / f"client-{client['version']}"
 work = output / "batches"
 work.mkdir(parents=True, exist_ok=True)
 sources = output / "sources"
@@ -25,9 +25,9 @@ tool_jar = root / f"tools/reverse/vendor/vineflower-{tool['version']}.jar"
 signature = hashlib.sha256(jar.read_bytes()).hexdigest() + ":" + tool["sha256"] + ":768m-2threads-runtime0-v1:" + str(args.batch_size)
 if hashlib.sha256(tool_jar.read_bytes()).hexdigest() != tool["sha256"]:
     raise SystemExit("Decompiler SHA256 mismatch")
-for record in frozen["files"]:
+for record in client["files"]:
     if hashlib.sha256((root / record["path"]).read_bytes()).hexdigest().lower() != record["sha256"].lower():
-        raise SystemExit("Frozen input changed: " + record["path"])
+        raise SystemExit("Client input changed: " + record["path"])
 stamp = output / "decompile.stamp"
 records = []
 with zipfile.ZipFile(jar) as archive:
@@ -56,7 +56,7 @@ with zipfile.ZipFile(jar) as archive:
             for entry in entries: shard.writestr(entry, archive.read(entry))
         command = [str(root / "jdk/bin/java.exe"), "-Xmx768m", "-jar", str(tool_jar),
                    "--folder", "--log-level=warn", "--thread-count=2", "--include-runtime=0"]
-        # The full frozen JAR supplies signatures for classes outside this shard.
+        # The full client JAR supplies signatures for classes outside this shard.
         # External dependencies are read as libraries, never executed/decompiled here.
         command += ["-e=" + str(library) for library in sorted((root / "code").glob("*.jar"))]
         command += [str(batch), str(sources)]

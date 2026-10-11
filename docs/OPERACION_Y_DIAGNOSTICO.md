@@ -67,8 +67,8 @@ El verificador no abre puertos, no compila, no modifica preferencias ni cambia e
 | Firewall VPN no permite al invitado | LocalSubnet no equivale a clientes VPN; revisar la regla específica de IP/puerto/programa de la guía |
 | New-NetFirewallRule no existe | Abrir Windows PowerShell en Windows con módulo NetSecurity; no ejecutar ese paso en Linux |
 | Access denied al configurar firewall | Ese paso requiere PowerShell como administrador; iniciar el juego no requiere elevar si la carpeta es escribible |
-| Version mismatch accepted for local development | El emulador acepta versiones distintas con aviso: eso no prueba compatibilidad; usar esta misma copia congelada |
-| La biblioteca congelada cambio | El SHA-256 difiere; volver a la entrega correcta y conservar cualquier cambio propio aparte |
+| Version mismatch accepted for local development | El emulador acepta versiones distintas con aviso: eso no prueba compatibilidad; usar esta misma copia |
+| La biblioteca del cliente cambió | El SHA-256 difiere; volver a la entrega correcta y conservar cualquier cambio propio aparte |
 | Falta movement.deltaIntervalMs | Restaurar server/server.properties de la entrega; no borrar la configuración para recurrir a defaults |
 | No carga Training Hall | Revisar scenes/294, rsrc/config, copia completa y hashes; adjuntar el log, sin mezclar datos de Steam |
 | No carga OpenGL o error de DLL | Revisar controlador gráfico y native/code completos; servidor solo y cliente gráfico son procesos distintos |
@@ -98,10 +98,10 @@ El verificador no abre puertos, no compila, no modifica preferencias ni cambia e
 
 Los ajustes están en `server/server.properties`. Detené el servidor antes de guardar una modificación y reinicialo después. La configuración actual debe conservarse para comparar resultados: velocidad base 5.0, multiplicador 1.0 y los tres intervalos a 20 ms.
 
-Con servidor y cliente cerrados, copiá la carpeta completa a otra carpeta o unidad. Si sólo guardás cambios propios, respaldá `server`, `portable`, `client-local/src`, lanzadores y `profile/preferences`; para una restauración completa también necesitás los binarios congelados. Ese respaldo guarda archivos/configuración, no progreso de juego en memoria.
+Con servidor y cliente cerrados, copiá la carpeta completa a otra carpeta o unidad. Si sólo guardás cambios propios, respaldá `server`, `portable`, `client-local/src`, lanzadores y `profile/preferences`; para una restauración completa también necesitás los binarios. Ese respaldo guarda archivos/configuración, no progreso de juego en memoria.
 
 Para restaurar, extraé el respaldo en una carpeta nueva, verificá hashes y ejecutá la prueba integral antes de volver a alojar. No sobrescribas automáticamente una instalación en uso. Al mover la carpeta, las reglas VPN limitadas a la ruta de Java deben actualizarse.
 
 ## Actualizaciones controladas
 
-Steam no actualiza esta carpeta. Una revisión del servidor se entrega de forma explícita, conservando la versión de datos. Si se decide cambiar el cliente/datos congelados, preparar otra carpeta, otra verificación de compatibilidad y un paquete igual para todos los jugadores. No mezclar JAR, DLL o mapas de distintas revisiones.
+Steam no actualiza esta carpeta. Una revisión del servidor se entrega de forma explícita, conservando la versión de datos. Si se decide cambiar el cliente/datos, preparar otra carpeta, otra verificación de compatibilidad y un paquete igual para todos los jugadores. No mezclar JAR, DLL o mapas de distintas revisiones.

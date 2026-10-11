@@ -14,7 +14,7 @@ import com.threerings.tudey.data.actor.Actor;
 import com.threerings.tudey.shape.Shape;
 import com.threerings.tudey.data.actor.Mobile;
 
-/** Uses the frozen game's own combat state machine instead of imitation timers. */
+/** Uses the game's own combat state machine instead of imitation timers. */
 public final class VanillaCombatController extends i {
     private final SceneManager scene;
     private final Dungeoneer pawn;
@@ -40,7 +40,7 @@ public final class VanillaCombatController extends i {
         }
     }
     private static void initializeMovement(Mobile pawn) {
-        // This client-only frozen Mobile has no assignment to _maxStep. The
+        // This client-only client Mobile has no assignment to _maxStep. The
         // native controller clamps every integration step to zero otherwise.
         // The native integrator subdivides at 60 Hz; its context now resolves
         // map/enemy penetration after every integration step.

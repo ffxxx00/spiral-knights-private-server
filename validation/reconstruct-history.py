@@ -68,7 +68,7 @@ def server_path(name):
 commit(archive('server-before-adaptation.zip', server_path),
        'reconstruct: importar servidor anterior a la adaptacion',
        'Fuentes exactas de server-before-adaptation.zip. Es la primera copia disponible,\n'
-       'no prueba de que sea la primera version creada. Puede no compilar con el cliente congelado.')
+       'no prueba de que sea la primera version creada. Puede no compilar con el cliente.')
 
 def adapted_path(name):
     if name.endswith('.java') or name == 'server.properties':
@@ -77,7 +77,7 @@ def adapted_path(name):
         return name
 
 commit(archive('before-low-latency.zip', adapted_path),
-       'reconstruct: adaptar protocolo al cliente congelado',
+       'reconstruct: adaptar protocolo al cliente',
        'Entradas exactas de before-low-latency.zip. Estado previo a la baja latencia.\n'
        'Este respaldo no contiene todos los archivos necesarios para ejecutar el cliente.')
 
@@ -134,7 +134,7 @@ manifest = {'method': 'Exact archived entries followed by grouped current source
             'finalSourceFiles': {p: digest(data) for p, data in sorted(tracked.items())}}
 (ROOT / 'docs' / 'HISTORY_EVIDENCE.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
-# A deny-by-default policy keeps the frozen game and local data out of future commits.
+# A deny-by-default policy keeps the game and local data out of future commits.
 ignored = ['*', '!.gitignore', '!.gitattributes', '!AGENTS.md', '!README.md',
            '!LEEME_PRIMERO.md', '!README_GITHUB.md', '!HISTORY_RECONSTRUCTION.md',
            '!*.bat', '!*.ps1', '!frozen-version.json', '!full.dat', '!getdown.txt', '!version.txt',
@@ -162,7 +162,7 @@ Los siguientes agrupan fuentes actuales por funcion, sin pretender reproducir
 cada cambio intermedio ni el orden exacto de todo el desarrollo.
 
 Los commits historicos pueden carecer de auxiliares o ser incompatibles con
-la biblioteca congelada. No se declara que cada commit historico compile ni
+la biblioteca. No se declara que cada commit historico compile ni
 pase las pruebas. Para trabajar, usar el ultimo commit y los recursos indicados
 en README_GITHUB.md. La reconstruccion no modifico fuentes ni archivos del juego.
 

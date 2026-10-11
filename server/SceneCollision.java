@@ -7,7 +7,7 @@ import com.threerings.tudey.data.actor.Actor;
 import com.threerings.projectx.dungeon.data.actor.Monster;
 import com.threerings.tudey.shape.Shape;
 
-/** Frozen tile/placeable geometry plus live enemy shapes; shared by movement queries. */
+/** Client tile/placeable geometry plus live enemy shapes; shared by movement queries. */
 public final class SceneCollision {
     private final TudeySceneModel model;
     private final CombatWorld world;

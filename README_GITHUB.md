@@ -5,7 +5,7 @@ los lanzadores, las pruebas y la documentacion. El historial inicial fue
 reconstruido: ver [HISTORY_RECONSTRUCTION.md](HISTORY_RECONSTRUCTION.md).
 
 **Clonar este repositorio no descarga el juego completo.** Para compilar y
-ejecutar se necesita la copia congelada **20261006114613**, con sus propios
+ejecutar se necesita la copia **20261006114613**, con sus propios
 `code/`, `rsrc/`, `scenes/`, `native/`, `java_vm/` y `jdk/`. Estos archivos no
 estan en Git. No completar una copia faltante con actualizaciones del juego
 en vivo ni mezclar versiones. Las huellas disponibles estan registradas en
@@ -13,7 +13,7 @@ en vivo ni mezclar versiones. Las huellas disponibles estan registradas en
 la instalacion.
 
 Para trabajar sobre la copia local existente, clonar en una carpeta separada
-y colocar alli los recursos congelados correspondientes, conservando las
+y colocar alli los recursos correspondientes, conservando las
 fuentes de este repositorio. No sobrescribir `server/server.properties` de
 una instancia personalizada sin revisar sus cambios. Conservar `full.dat`.
 

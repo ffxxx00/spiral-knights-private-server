@@ -119,7 +119,7 @@ public class TestEmulatorProtocol {
                 "PlayerObject does not use the installed starter player color");
             checkInstalledColor(player.color);
             check(player.MO() == ((Boolean)Pref.PARTY_WITH_ANY.defValue).booleanValue(),
-                "OptionsDialog cannot read the frozen client's default party preference");
+                "OptionsDialog cannot read the client's default party preference");
             check(player.availableKnights != null && player.availableKnights.length == 1,
                 "PlayerObject does not expose one selectable knight");
             check("character/pc/model_level.dat".equals(
@@ -895,7 +895,7 @@ public class TestEmulatorProtocol {
             wire.send(ping);
             PongResponse pong = readUntilMessage(wire, PongResponse.class, "PongResponse");
             check(pong.yl() >= ping.yl() && pong.ym() >= pong.yl(),
-                "Keepalive omitted the frozen client's send/receive timestamps");
+                "Keepalive omitted the client's send/receive timestamps");
             check(pong.yn() >= 0 && pong.yn() <= pong.ym() - ping.yl(),
                 "Keepalive process delay does not fit within the round trip");
 

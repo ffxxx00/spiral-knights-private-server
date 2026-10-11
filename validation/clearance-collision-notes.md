@@ -1,6 +1,6 @@
 # Permisos de equipo y colisiones — 2026-10-11
 
-Datos congelados 20261006114613; sin modificar recursos, mapas ni JAR.
+Versión de datos: 20261006114613; sin modificar recursos, mapas ni JAR.
 
 El rango visible no bastaba: ItemConfig.Level y item.client.M consultan
 PlayerObject.dN(rarity). Para rarezas 2..5, dN comprueba progressFlags a través
@@ -38,4 +38,4 @@ Todavía faltan validación visual, desniveles, autoapuntado, IA y daño al juga
 no se declara paridad total 1:1.
 
 Resultado: test_server.bat terminó con ambas suites PASSED (exit 0).
-verificar-copia.ps1 confirmó los ocho hashes congelados sin cambios.
+verificar-copia.ps1 confirmó los ocho hashes sin cambios.

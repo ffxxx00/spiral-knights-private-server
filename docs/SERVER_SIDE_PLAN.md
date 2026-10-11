@@ -1,11 +1,11 @@
 # Reconstrucción del servidor por contratos
 
 El objetivo es ejecutar las reglas del juego de forma autoritativa y producir los
-objetos y deltas esperados por el cliente congelado 20261006114613.
+objetos y deltas esperados por el cliente 20261006114613.
 
 ## Base disponible
 
-- Cliente y catálogos congelados, índice JVM y auditoría de las 374 armas.
+- Cliente y catálogos, índice JVM y auditoría de las 374 armas.
 - Referencia pública de Clyde fijada por commit y hashes: ver CLYDE_COMPATIBILITY.md.
 - Contratos genéricos contrastados en esa referencia: ver ENGINE_ACTION_CONTRACTS.md.
 - Capturas preservadas, cinco segmentos de misión y comparador: ver TELEMETRY_CASES.md.
@@ -18,7 +18,7 @@ resuelto no demuestra que sus parámetros, ejecutor y estado inicial estén comp
 
 1. Adaptar un contrato genérico pequeño de Clyde. Separar el contexto de ejecución
    (reloj de escena, fuente, activador, RNG y acceso al mundo) del transporte TCP.
-   Mantener las configuraciones congeladas como entrada. Examinar primero None,
+   Mantener las configuraciones como entrada. Examinar primero None,
    Compound y apariciones simples; registrar resultado y efectos de cada acción.
 2. Conectar un ejecutor de casos al mismo contexto utilizado por CombatWorld.
    Capturar snapshots en tiempos solicitados y emitir el formato del comparador.
