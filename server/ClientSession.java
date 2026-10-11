@@ -533,6 +533,16 @@ public class ClientSession implements Runnable {
         bd.services.add(whirledZoneMarsh);
 
         sendMessage(new BootstrapNotification(bd));
+        // Presents defaults to ten outgoing messages per second. At a 20 ms
+        // input cadence that queues seconds of stale controls and scene ACKs.
+        // Use the existing protocol negotiation, with room for RPCs/keepalive.
+        int fastestInterval = Math.min(this.movementConfig.deltaIntervalMs,
+            this.movementConfig.trainingDeltaIntervalMs);
+        int messagesPerSecond = Math.max(100, 2 * ((1000 + fastestInterval - 1)
+            / fastestInterval) + 20);
+        sendMessage(new UpdateThrottleMessage(messagesPerSecond));
+        System.out.println("[ClientSession-" + connectionId
+            + "][NETWORK] client send budget=" + messagesPerSecond + " messages/sec");
         System.out.println("[ClientSession-" + connectionId + "][BOOTSTRAP] sent services="
             + "Location,Knight,ProjectXZone,Chat,Scene,Zone");
         System.out.println("[ClientSession-" + connectionId + "][BOOTSTRAP] waiting for client subscription to OID=" + clientOid);
@@ -1351,7 +1361,7 @@ public class ClientSession implements Runnable {
     /**
      * State that changes the controller or animation is delivered on the next
      * scene tick. Pure transform reconciliation may wait for the configured
-     * 200 ms snapshot boundary while the local pawn prediction stays smooth.
+     * configured snapshot boundary while the local pawn prediction stays smooth.
      */
     private boolean hasImmediateActorChange(Map<Integer, Knight> actors) {
         if (!this.lastSentActors.keySet().equals(actors.keySet())) {

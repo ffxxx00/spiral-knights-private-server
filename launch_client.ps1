@@ -12,7 +12,9 @@ param(
     [ValidatePattern('^[A-Za-z0-9_-]{1,24}$')]
     [string]$KnightName = 'HeroKnight',
 
-    [switch]$DebugProtocol
+    [switch]$DebugProtocol,
+
+    [switch]$NetworkMode
 )
 
 $ErrorActionPreference = 'Stop'
@@ -22,6 +24,33 @@ $javaPath = Join-Path $gameRoot 'java_vm\bin\java.exe'
 $sourceConfig = Join-Path $gameRoot 'server\local-config\deployment.properties'
 $runtimeConfig = Join-Path $gameRoot 'server\runtime-client-config'
 $runtimeDeployment = Join-Path $runtimeConfig 'deployment.properties'
+$localMode = -not $NetworkMode -and $ServerHost -in @('localhost', '127.0.0.1', '::1')
+$localClasses = Join-Path $gameRoot 'client-local/classes'
+
+if ($localMode) {
+    # Only the loopback launcher uses this overlay. The frozen JAR stays intact.
+    $lockedBuild = Get-Content -LiteralPath (Join-Path $gameRoot 'frozen-version.json') -Raw | ConvertFrom-Json
+    $lockedJar = $lockedBuild.files | Where-Object { $_.path -eq 'code/projectx-pcode.jar' }
+    $jarPath = Join-Path $gameRoot 'code/projectx-pcode.jar'
+    $jarStream = [IO.File]::OpenRead($jarPath)
+    $hasher = [Security.Cryptography.SHA256]::Create()
+    try { $jarHash = [BitConverter]::ToString($hasher.ComputeHash($jarStream)).Replace('-', '') }
+    finally { $jarStream.Dispose(); $hasher.Dispose() }
+    if ($jarHash -ne $lockedJar.sha256) {
+        throw 'La biblioteca congelada cambio. No se puede aplicar el modo local.'
+    }
+    $serverSettings = Get-Content -LiteralPath (Join-Path $gameRoot 'server/server.properties') -Raw
+    $intervalMatch = [regex]::Match($serverSettings, '(?m)^movement\.deltaIntervalMs\s*=\s*(\d+)')
+    if (-not $intervalMatch.Success) { throw 'Falta movement.deltaIntervalMs para el modo local.' }
+    $localInterval = [int]$intervalMatch.Groups[1].Value
+    & (Join-Path $gameRoot 'jdk/bin/javac.exe') --release 17 -d $localClasses `
+        (Join-Path $gameRoot 'portable/BuildLocalClient.java') `
+        (Join-Path $gameRoot 'client-local/src/com/threerings/tudey/util/q.java')
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo compilar el modo local.' }
+    & (Join-Path $gameRoot 'jdk/bin/java.exe') -cp $localClasses portable.BuildLocalClient `
+        $jarPath $localClasses $localInterval
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el intervalo del cliente local.' }
+}
 
 if (-not (Test-Path -LiteralPath $sourceConfig -PathType Leaf)) {
     throw "No se encontro la configuracion base: $sourceConfig"
@@ -59,8 +88,10 @@ $classPath = @(
     'code/commons-logging.jar',
     '.'
 ) -join ';'
+if ($localMode) { $classPath = "$localClasses;$classPath" }
 
 $javaArgs = @(
+    "-Dspiral.local.lowLatency=$($localMode.ToString().ToLowerInvariant())",
     "-Duser.home=$gameRoot\profile",
     '-Djava.util.prefs.PreferencesFactory=portable.LocalPreferencesFactory',
     "-Dprivate.preferences.dir=$gameRoot\profile\preferences",
@@ -96,6 +127,7 @@ Write-Host '==================================================================' 
 Write-Host "Destino TCP: $ServerHost`:$Port" -ForegroundColor Green
 Write-Host "Caballero local: $KnightName" -ForegroundColor Green
 Write-Host "Debug de protocolo: $($DebugProtocol.IsPresent)" -ForegroundColor DarkGray
+Write-Host "Modo local de baja latencia: $localMode" -ForegroundColor Green
 
 [IO.Directory]::CreateDirectory((Join-Path $gameRoot 'profile')) | Out-Null
 # ProjectXApp.Ha() starts Getdown when this marker is absent. All resources
