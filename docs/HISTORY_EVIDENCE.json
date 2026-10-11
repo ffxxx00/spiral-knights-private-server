@@ -1,0 +1,590 @@
+{
+  "method": "Exact archived entries followed by grouped current sources; no backdating.",
+  "archives": [
+    {
+      "archive": "server-before-adaptation.zip",
+      "sha256": "51f1a76f18c3bd68d362201f62e0be3676ecf0a0a8ae875d2931c5eb3d1481d9",
+      "entries": [
+        {
+          "archivePath": "server/ClientSession.java",
+          "repositoryPath": "server/ClientSession.java",
+          "sha256": "a51d41dd78d5e7ba60d4be7e753d6b1a26b71ad80e0af5f6387607d86b78bc51",
+          "zipTimestamp": [
+            2026,
+            9,
+            16,
+            20,
+            6,
+            56
+          ]
+        },
+        {
+          "archivePath": "server/DObjectManager.java",
+          "repositoryPath": "server/DObjectManager.java",
+          "sha256": "2812cdd4285835972c4b84d6040b3de6e8788b7ace25e80e5e4920e0e81ea316",
+          "zipTimestamp": [
+            2026,
+            9,
+            16,
+            20,
+            1,
+            22
+          ]
+        },
+        {
+          "archivePath": "server/InstalledConfigManager.java",
+          "repositoryPath": "server/InstalledConfigManager.java",
+          "sha256": "f7952679846375c8711e49ce2942497ede8909aa91a3c153ea59256698701a0a",
+          "zipTimestamp": [
+            2026,
+            9,
+            16,
+            20,
+            1,
+            4
+          ]
+        },
+        {
+          "archivePath": "server/ItemCatalog.java",
+          "repositoryPath": "server/ItemCatalog.java",
+          "sha256": "9d7ab950efb4761aebd868ea262b8e28403ed8a051be4156e720242e3f5668b1",
+          "zipTimestamp": [
+            2026,
+            9,
+            16,
+            20,
+            1,
+            32
+          ]
+        },
+        {
+          "archivePath": "server/MovementConfig.java",
+          "repositoryPath": "server/MovementConfig.java",
+          "sha256": "e1895f274eb4ff74e80241716d415a616cfd48c9d99d2335474620cf46372a07",
+          "zipTimestamp": [
+            2026,
+            9,
+            5,
+            0,
+            50,
+            2
+          ]
+        },
+        {
+          "archivePath": "server/SceneManager.java",
+          "repositoryPath": "server/SceneManager.java",
+          "sha256": "d13f485877a4c287fc079ef14787e556ddc22d79d3433b5fe98e82b8da2b498b",
+          "zipTimestamp": [
+            2026,
+            9,
+            16,
+            20,
+            2,
+            22
+          ]
+        },
+        {
+          "archivePath": "server/SceneNetworkManager.java",
+          "repositoryPath": "server/SceneNetworkManager.java",
+          "sha256": "5c39134d20fb9ea4c69e31c5e1e5c65ca466b366a7192ecb876b129c1ead90a3",
+          "zipTimestamp": [
+            2026,
+            9,
+            16,
+            20,
+            1,
+            12
+          ]
+        },
+        {
+          "archivePath": "server/SpiralServer.java",
+          "repositoryPath": "server/SpiralServer.java",
+          "sha256": "517396babdeb06f990a0d2af451a58a399269d4d87c03d289f06fcb8cdfbda24",
+          "zipTimestamp": [
+            2026,
+            9,
+            5,
+            0,
+            50,
+            2
+          ]
+        },
+        {
+          "archivePath": "server/TestEmulatorProtocol.java",
+          "repositoryPath": "server/TestEmulatorProtocol.java",
+          "sha256": "5d220eb39d1b9f28bade402e2e885db5fbdd1dc2898c9d0c6acfd906256b871b",
+          "zipTimestamp": [
+            2026,
+            9,
+            16,
+            20,
+            9,
+            28
+          ]
+        }
+      ]
+    },
+    {
+      "archive": "before-low-latency.zip",
+      "sha256": "8c47312bf27e3a741be75a7b336f2dc390d0f8a180aa8697c261fc8ed9836b57",
+      "entries": [
+        {
+          "archivePath": "ClientSession.java",
+          "repositoryPath": "server/ClientSession.java",
+          "sha256": "8382232d2de557ae5f55fc5b69d80e30d6aa4d3630f7db35ba931a11a57af226",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            37,
+            24
+          ]
+        },
+        {
+          "archivePath": "DObjectManager.java",
+          "repositoryPath": "server/DObjectManager.java",
+          "sha256": "740eb21ac407a5f4d94885afe822d8874d450f61a4628de8365b25acea856737",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "InstalledConfigManager.java",
+          "repositoryPath": "server/InstalledConfigManager.java",
+          "sha256": "ea456c7952767ea33db6f93501062529108533b92a6d62ed90909e2e405beacd",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "ItemCatalog.java",
+          "repositoryPath": "server/ItemCatalog.java",
+          "sha256": "fe23974ccba29fe3681cc6eb44985d9641a32b38d1e87c99149bc5d364901458",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "MovementConfig.java",
+          "repositoryPath": "server/MovementConfig.java",
+          "sha256": "0ca11c169b9ca12b4231465f8b3dc22ef639ba951c071a94d6b9731c5cd91305",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "SceneManager.java",
+          "repositoryPath": "server/SceneManager.java",
+          "sha256": "c19b0a0c3718ec246d68464b86f18ab60fbd4ee79e2ff869ba00be152ddf2bb8",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "SceneNetworkManager.java",
+          "repositoryPath": "server/SceneNetworkManager.java",
+          "sha256": "9d83296daac23f90642ab0720595165b75a676cb7a86e572c512fa09a0345251",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "SpiralServer.java",
+          "repositoryPath": "server/SpiralServer.java",
+          "sha256": "5b2f2fe97e734413ffd16d409fe8baa9fb1dbad1e9c8cd3ee8b5ab2166fc6e74",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "TestEmulatorProtocol.java",
+          "repositoryPath": "server/TestEmulatorProtocol.java",
+          "sha256": "63a08b76b73dea27e5bc4df4d9a417ac8488153217d86754ecd7f0e5ae1d2197",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            37,
+            38
+          ]
+        },
+        {
+          "archivePath": "server.properties",
+          "repositoryPath": "server/server.properties",
+          "sha256": "11e87fbbec1bde44c87478901631381cc6279755ada422154776d432798ca1b3",
+          "zipTimestamp": [
+            2026,
+            9,
+            5,
+            0,
+            50,
+            2
+          ]
+        },
+        {
+          "archivePath": "launch_client.ps1",
+          "repositoryPath": "launch_client.ps1",
+          "sha256": "f1120f417706c7c79c8711b1d1d7821645d303b376a548a9154b860e3eba1020",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            33,
+            42
+          ]
+        },
+        {
+          "archivePath": "test_server.bat",
+          "repositoryPath": "test_server.bat",
+          "sha256": "b6fdb94da13b86cf78937e31f703ce11e37d6a1f0b432ebdfae9ba6a91de78a6",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            22,
+            16
+          ]
+        }
+      ]
+    },
+    {
+      "archive": "before-render-optimization.zip",
+      "sha256": "cf17498fc76e3ee48454c03f975f9070427a20c2932faff5f85d0ecdeecad70a",
+      "entries": [
+        {
+          "archivePath": "launch_client.ps1",
+          "repositoryPath": "launch_client.ps1",
+          "sha256": "5384de372d37439c5a741e2ead5288e0885a35c0c78e529f71694e8caea954cf",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            50,
+            8
+          ]
+        },
+        {
+          "archivePath": "BuildLocalClient.java",
+          "repositoryPath": "portable/BuildLocalClient.java",
+          "sha256": "9818b28b5fdd358189f61ca1ea8c939ae17e776b3c0832ed0e249ceb1473cdcf",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            16,
+            4,
+            14
+          ]
+        },
+        {
+          "archivePath": "ClientSession.java",
+          "repositoryPath": "server/ClientSession.java",
+          "sha256": "a9cf4e09fd621beb050ddd2f04efb793ae78c5a1db74d28a51fa0d9ce456677c",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            16,
+            1,
+            36
+          ]
+        }
+      ]
+    },
+    {
+      "archive": "before-authoritative-combat.zip",
+      "sha256": "a02927863866d5eb27678e1e9b3e255f229dc01d74a4f2913d6e553fdfb43478",
+      "entries": [
+        {
+          "archivePath": "server/ClientSession.java",
+          "repositoryPath": "server/ClientSession.java",
+          "sha256": "e70e3bf06c207e6888b23dcaac448119a9459d80d222804c2a4c6d2fed1dbab1",
+          "zipTimestamp": [
+            2026,
+            10,
+            10,
+            19,
+            26,
+            16
+          ]
+        },
+        {
+          "archivePath": "server/DObjectManager.java",
+          "repositoryPath": "server/DObjectManager.java",
+          "sha256": "740eb21ac407a5f4d94885afe822d8874d450f61a4628de8365b25acea856737",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "server/InstalledConfigManager.java",
+          "repositoryPath": "server/InstalledConfigManager.java",
+          "sha256": "af15b4009261603d87041421abc81d6e27a7dd8e2688a07fce9bbf65c5086831",
+          "zipTimestamp": [
+            2026,
+            10,
+            11,
+            5,
+            16,
+            56
+          ]
+        },
+        {
+          "archivePath": "server/ItemCatalog.java",
+          "repositoryPath": "server/ItemCatalog.java",
+          "sha256": "fe23974ccba29fe3681cc6eb44985d9641a32b38d1e87c99149bc5d364901458",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "server/MovementConfig.java",
+          "repositoryPath": "server/MovementConfig.java",
+          "sha256": "0ca11c169b9ca12b4231465f8b3dc22ef639ba951c071a94d6b9731c5cd91305",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "server/README_LAN.md",
+          "repositoryPath": "server/README_LAN.md",
+          "sha256": "dbc4c58df70c9ac76835d2fda1ff45b6ebe73b004dc069f4a66203ad7f5321ea",
+          "zipTimestamp": [
+            2026,
+            10,
+            10,
+            22,
+            50,
+            46
+          ]
+        },
+        {
+          "archivePath": "server/SceneManager.java",
+          "repositoryPath": "server/SceneManager.java",
+          "sha256": "c19b0a0c3718ec246d68464b86f18ab60fbd4ee79e2ff869ba00be152ddf2bb8",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "server/SceneNetworkManager.java",
+          "repositoryPath": "server/SceneNetworkManager.java",
+          "sha256": "677f1b69a36e33ebfa01a6fa407da20f2dadd10b4aed153b2de7abba6b558f86",
+          "zipTimestamp": [
+            2026,
+            10,
+            10,
+            19,
+            26,
+            16
+          ]
+        },
+        {
+          "archivePath": "server/server.properties",
+          "repositoryPath": "server/server.properties",
+          "sha256": "0f2be6d16b447ebcc039460913e8e877aafe494c09fe7f06650076be099918d5",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            16,
+            1,
+            36
+          ]
+        },
+        {
+          "archivePath": "server/SpiralServer.java",
+          "repositoryPath": "server/SpiralServer.java",
+          "sha256": "5b2f2fe97e734413ffd16d409fe8baa9fb1dbad1e9c8cd3ee8b5ab2166fc6e74",
+          "zipTimestamp": [
+            2026,
+            10,
+            9,
+            15,
+            29,
+            8
+          ]
+        },
+        {
+          "archivePath": "server/TestEmulatorProtocol.java",
+          "repositoryPath": "server/TestEmulatorProtocol.java",
+          "sha256": "9ae8435c6f6470cccd71a41ecad37b50e463001e141561c0cd6371b08c679c87",
+          "zipTimestamp": [
+            2026,
+            10,
+            10,
+            19,
+            27,
+            22
+          ]
+        }
+      ]
+    }
+  ],
+  "milestoneCommits": [
+    {
+      "sha": "af18bd36f09924841c9f42706b23259794a5cc33",
+      "title": "reconstruct: importar servidor anterior a la adaptacion",
+      "evidence": "Fuentes exactas de server-before-adaptation.zip. Es la primera copia disponible,\nno prueba de que sea la primera version creada. Puede no compilar con el cliente congelado."
+    },
+    {
+      "sha": "0a602c5da5b74d762806ade13635ed81187588d9",
+      "title": "reconstruct: adaptar protocolo al cliente congelado",
+      "evidence": "Entradas exactas de before-low-latency.zip. Estado previo a la baja latencia.\nEste respaldo no contiene todos los archivos necesarios para ejecutar el cliente."
+    },
+    {
+      "sha": "b578a72a6a2e990cd55df27fbfad91b3dc906d78",
+      "title": "reconstruct: recuperar primer ajuste de latencia local",
+      "evidence": "Tres archivos exactos de before-render-optimization.zip; el resto conserva el\nrespaldo anterior. Es una reconstruccion parcial, no un snapshot integral probado."
+    },
+    {
+      "sha": "38025eef6247af978795b949416d98c0b570c793",
+      "title": "reconstruct: recuperar servidor previo al combate autoritativo",
+      "evidence": "Fuentes y configuracion exactas de before-authoritative-combat.zip. Agrupa\najustes posteriores de red y controles sin inventar snapshots intermedios."
+    },
+    {
+      "sha": "8353417bdc539743b2d0d7772090b92dc70c537f",
+      "title": "reconstruct: consolidar copia portable y cliente local optimizado",
+      "evidence": "Archivos actuales: aislamiento de preferencias, lanzadores, congelacion,\noverlay local, renderizado, detencion del movimiento y backend FFM.\nSin respaldos completos para separar con exactitud cada correccion del cliente."
+    },
+    {
+      "sha": "8a074ae2f03bfdea82fc2de0555dfd844cf5e205",
+      "title": "reconstruct: implementar combate autoritativo y regresiones",
+      "evidence": "Diferencia entre el respaldo previo al combate y las fuentes actuales.\nIncluye controlador vanilla, cubos, dano, proyectiles, bombas y pruebas.\nParidad incompleta y comprobacion visual pendiente; ver COMBATE_VANILLA.md."
+    },
+    {
+      "sha": "ac338fa46b55c01308f5e47eceb2ca8c74c51bd8",
+      "title": "reconstruct: documentar hosting Windows y evidencia de validacion",
+      "evidence": "Documentacion y herramientas actuales. Las notas describen pruebas historicas;\nlos logs, dumps, recursos, perfiles y binarios referenciados no se distribuyen."
+    }
+  ],
+  "finalSourceFiles": {
+    "AGENTS.md": "8e72f56b53f037dd1728f13aa5009b1ae7c51bdb0aa510cecfd791564262a45e",
+    "LEEME_PRIMERO.md": "6c759ace8cf8c1ef77458826fc5d409d23d337a0149f80f0de2aada12c31ceea",
+    "README.md": "05321c5c74cdc79cc430abc0af6930409391386627e53e779a074838442e92b1",
+    "allow_lan_firewall.ps1": "3b729a326e0a64f4bc655d4dde0b5f11b2312eca606f64c6c91a6395e2301d86",
+    "client-local/README.md": "66958625f04987bf32fba51a763e9b45340a90603fde8ed39340a25ba8040707",
+    "client-local/src/com/threerings/tudey/util/q.java": "96b2a4c9af53baef8b2e11c996dcb726959516db8e40d8f4a927cf94b42454de",
+    "docs/COMBATE_VANILLA.md": "6d6797ff496554d78aa5106bb564764d443511c4839b508617bf7d12ac061c50",
+    "docs/GUIA_CLIENTE.md": "e28a97033b9bf5ea707f987f0904a1c21a4f22f1d6955ec862ef111775da8ab6",
+    "docs/GUIA_HOSTING_WINDOWS.md": "8b153259381765ebc62afe51331f2b10548d75a7daa46294888bf64454d38d0c",
+    "docs/MANUAL_COMPLETO.html": "182bc457ac1797fb40733320c7c951ba786da7263ec5357bbf483d609b9a5c18",
+    "docs/OPERACION_Y_DIAGNOSTICO.md": "f24a8d66a02ee2fa00031238f577627bd2cc6fb06bea8f227202b896f84b76ed",
+    "docs/PREPARAR_ENTREGA.md": "c1edf9ad02f6afd725d0af28923e58f51e2c9a10968080c5960c8051a0c58cc2",
+    "docs/README.md": "498c7dd0ab7fe8340deb358f9ce2f5bad64b1b587a0d7932d192e75809350e57",
+    "docs/REFERENCIA_TECNICA.md": "ba949c65b7d93103d21d6b17759145238279f13fcf3d1c70ec8ce41cebf5f595",
+    "docs/verificar-copia.ps1": "d1c479c040a64dcd7079945205dd5b5e004e176d493eff45bee4559ae7792f72",
+    "frozen-version.json": "3cf11bbaaa6e1bc4981e01e63fd9a0ddad496e1dba0bb905930fc700e76d1f5e",
+    "full.dat": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "getdown.txt": "4572c27ab77d7ddc96eadcea3f90b5a083751fb3ff39de7a96b64fb0d474dfb4",
+    "launch_client.bat": "8a0abc937739f830870f52aaafe84d24ae411a3466886192b51b5e4ff4456d1d",
+    "launch_client.ps1": "6f623577a9007d6f6dae0231775e756598649d40c0fcc01852587c486135939b",
+    "portable/BuildLocalClient.java": "8de8e6c8d45231108dc69a0bdf54c57904c24d4b3273179aeda0368bc3d45317",
+    "portable/LocalPreferencesFactory.java": "30350058c52ecb81fbc56e76af74b6c4072e6388b9f63a64c51cc1719b2451a1",
+    "portable/TestLocalPreferences.java": "67e8b6a616c8fe1b677941bbfc0a8abba72e034c66e2d1567a1776fcf1702b80",
+    "run_server.bat": "c9e0904120d193fee08c4d500ea4da95c7f61c94d42f0d2fe78294bd7fca3cba",
+    "run_server.ps1": "9d596376ee8992bab2bea17ff09114ff5b02e5b24c81e27c6d5b61b3a0a6aeff",
+    "server/ClientSession.java": "349d659a922702b831c0d57c1b44ff3347f231c46d97fa55686a84139f6a10b3",
+    "server/CombatWorld.java": "75f95d26b8b4fd7274c0c06d0b3a700fbfc517fdab797ac6585238515651d92d",
+    "server/DObjectManager.java": "740eb21ac407a5f4d94885afe822d8874d450f61a4628de8365b25acea856737",
+    "server/InstalledConfigManager.java": "f7049948eaf07e85121a3dac3d75c2ec4352ce4ae105f3555bca1cda8d4e8d86",
+    "server/ItemCatalog.java": "fe23974ccba29fe3681cc6eb44985d9641a32b38d1e87c99149bc5d364901458",
+    "server/MovementConfig.java": "0ca11c169b9ca12b4231465f8b3dc22ef639ba951c071a94d6b9731c5cd91305",
+    "server/README_LAN.md": "dbc4c58df70c9ac76835d2fda1ff45b6ebe73b004dc069f4a66203ad7f5321ea",
+    "server/SceneManager.java": "fe089da51adf4bea3430419b95f5dadba99530db28367ce1619cdf414e6c7bc1",
+    "server/SceneNetworkManager.java": "423536c7a71b5e7d3b6c9242505ca0b17bb22ee80c679d7ad7b26bc875f6bb82",
+    "server/SpiralServer.java": "9c243b8b50af1b2932961350f6d0a2aa0510578baf631d529f712d55574e1be8",
+    "server/TestCombatSimulation.java": "fb0af3c5932af380a48ac20c659fee98e86f80e5e05ee6dd3ef8dbe37b9e0a4f",
+    "server/TestEmulatorProtocol.java": "3b5e8c65a0e2354bfd3f53731c81c89a9e63db8347885deba49d8704fc5f45b3",
+    "server/VanillaCombatController.java": "bd0d08f9d9b7720bd03a4378bd00c615142d2668d19b173fda85e929ce5bf068",
+    "server/local-config/deployment.properties": "f70ef51a20c9b5baaea756d798a5873611c7eca48237c926781591f68c929aba",
+    "server/server.properties": "0f2be6d16b447ebcc039460913e8e877aafe494c09fe7f06650076be099918d5",
+    "start_server.bat": "900b37fc3f6a10be64ca04be22d4f547f3d0b21842db57ca0005d881ec2c5466",
+    "test_server.bat": "1c07c622a06512b507921a0f8731fb129c5fbb2d9a1810376240c0a083e8e7cd",
+    "validation/AnalyzePerformance.java": "25e89b3e6577dd01bc84670dbe63da1acae9438841accdc5d117955581e0db15",
+    "validation/CheckFrozenOverlay.java": "578c5441ffe861108f9a88c1314324622c6b6eafef3c0951ec80af11d5fcb0a8",
+    "validation/CheckLocalClient.java": "28cfaa1e8ca9ce939ffb6a6c2dbbe1a1d4901d3b41b36e78db5b955676db81d4",
+    "validation/CombatDataAudit.java": "7c2bcd03d6cd34eaacc4162f2530ac4aaf647a6ae475dcaef868462f3ad76039",
+    "validation/CombatVisualServer.java": "b3fb80347591343c2c0fe07d1a3656dd6cf675b312433bcff3264d597dbcf455",
+    "validation/MeasureClient.java": "a9558a331543657ddbf85c19a3e70331427ca787da31e186bc6d33a324e65d9f",
+    "validation/MeasureLoopback.java": "f71956de3ca77654230522546f610037da7ebad8bf6418125da5322c22e3349e",
+    "validation/MeasureStop.java": "1bd59571bb471b96a892a6f12456545b7a64d521b70eb063d6c19c0d9734b0f5",
+    "validation/UnsafeMemoryProbe.java": "821f8d7597c438a495545259f0314c570abb41ce5b95e3aa6d7e9a581a396ca7",
+    "validation/VanillaCombatProbe.java": "f5ba3bb70294a4d3c798c69b59235f964949b0af2848762462aebf3f34e72181",
+    "validation/authoritative-combat-notes.md": "204de5b0fe8af2438ddad4e3c2bf46e1596bc0d110380f94e2a7518162ad3818",
+    "validation/build-hosting-docs.py": "147dcb9c138809c64c4bd7ad471c45648acb9664c77d98fb7bc3c209d0fecb79",
+    "validation/compatibility-notes.md": "3926825697be83838c8a230bb4ef01e23219392ac41232535ae0d921d688a7eb",
+    "validation/ffm-memory-notes.md": "97f028affbeb0597385399c0804dae3b98006fe89018b3afb34b4045ba7dd696",
+    "validation/hosting-documentation-notes.md": "a5fcbffc5be3b80e392abafad311ea95e98044f33b3acb2efd3172b8a159057b",
+    "validation/launch-combat-probe.ps1": "d1e9ea1e19818dd39cea534268f23592ada77951f69909a08fa1d63a7002e53e",
+    "validation/launch-ffm-probe.ps1": "8199183bf1e290aa0d5e0c871e32cc43c9c430442dadf80d8d8abe061fa5b2a8",
+    "validation/low-latency-notes.md": "92be6524ee794ea921f80610b1ac9e35e34f4860de0c41d9ef9adbf2fbcec984",
+    "validation/measure-client.ps1": "f8b166357ac4cf445c8995f618eab9c03be3af9d292082a74e705a68dcd9ba46",
+    "validation/measure-stop.ps1": "6e4c7644cf645038f96c11ad3c82675059f5d9112a6b742a73f15f939dfe5ced",
+    "validation/profile-client.ps1": "5f88932e8ee023acfcf67ef8945d898a8f767490c31e8793e534f418dd80c444",
+    "validation/render-optimization-notes.md": "3679a9cdd159ed70c7110b1321586487f40c1e51e4af81ac3e252e45387d2ffa",
+    "validation/smoke-launch-client.ps1": "7d6e2146ef1355f8d9f9b63208828e8ad322d65398e249555f4558316071f5bc",
+    "validation/stop-movement-notes.md": "ed436906f27b85e964b69d29462b375792fb6833ba777f3e86958c8fd6e7cca9",
+    "version.txt": "7a0aa660b87bbfc9dd538fe6a039eee17e1649ced7d60a5c3da5f78a74bd9c10"
+  }
+}
