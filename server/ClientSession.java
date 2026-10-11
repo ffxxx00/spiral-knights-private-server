@@ -1193,6 +1193,20 @@ public class ClientSession implements Runnable {
     }
 
     synchronized Knight snapshotActorForTick(int sceneId, int timestamp) {
+        TickSnapshot snapshot = snapshotForTick(sceneId, timestamp);
+        return snapshot == null ? null : snapshot.actor;
+    }
+
+    static final class TickSnapshot {
+        final Knight actor;
+        final int inputTimestamp;
+        TickSnapshot(Knight actor, int inputTimestamp) {
+            this.actor = actor;
+            this.inputTimestamp = inputTimestamp;
+        }
+    }
+
+    synchronized TickSnapshot snapshotForTick(int sceneId, int timestamp) {
         if (!this.running || this.authoritativeActor == null
                 || this.currentSceneId != sceneId) {
             return null;
@@ -1202,11 +1216,11 @@ public class ClientSession implements Runnable {
             finishExpiredCombatActivity(
                 (Dungeoneer)this.authoritativeActor, timestamp);
         }
-        return (Knight)this.authoritativeActor.copy(null);
+        return new TickSnapshot((Knight)this.authoritativeActor.copy(null), this.lastInputTimestamp);
     }
 
     synchronized void publishSceneTick(
-            int sceneId, int timestamp, Map<Integer, Knight> actors)
+            int sceneId, int timestamp, Map<Integer, Knight> actors, int capturedInputTimestamp)
             throws IOException {
         if (!this.running || !this.sceneReady || this.currentSceneId != sceneId
                 || timestamp <= this.sceneTimestamp) {
@@ -1250,8 +1264,11 @@ public class ClientSession implements Runnable {
             }
         }
 
-        if (deliverActorState && this.lastInputTimestamp != Integer.MIN_VALUE) {
-            this.lastAcknowledgedInputTimestamp = this.lastInputTimestamp;
+        if (deliverActorState && capturedInputTimestamp != Integer.MIN_VALUE) {
+            // Input can arrive between the shared snapshot and its publication.
+            // Only acknowledge input represented by the delivered actor state:
+            // otherwise the client discards frames needed for reconciliation.
+            this.lastAcknowledgedInputTimestamp = capturedInputTimestamp;
         }
         int acknowledgedInputTimestamp = this.lastAcknowledgedInputTimestamp;
         short elapsed = (short)Math.max(1L,
@@ -1361,7 +1378,7 @@ public class ClientSession implements Runnable {
     /**
      * State that changes the controller or animation is delivered on the next
      * scene tick. Pure transform reconciliation may wait for the configured
-     * configured snapshot boundary while the local pawn prediction stays smooth.
+     * snapshot boundary while the local pawn prediction stays smooth.
      */
     private boolean hasImmediateActorChange(Map<Integer, Knight> actors) {
         if (!this.lastSentActors.keySet().equals(actors.keySet())) {

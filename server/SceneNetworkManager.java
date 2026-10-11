@@ -44,10 +44,8 @@ public final class SceneNetworkManager implements AutoCloseable {
         }
         this.running = true;
         // The scene timestamp is game time in milliseconds. The scheduler runs
-        // at Haven's 100 ms input cadence, while each channel decides when to
-        // emit. Training deliberately emits one reliable record every 200 ms:
-        // graphical-client telemetry showed that its Dungeoneer controller can
-        // consume about five records per second even when no ActorDelta exists.
+        // at the configured input cadence, while each channel decides when to
+        // emit. The local launcher matches its input interval to this cadence.
         this.ticker.scheduleAtFixedRate(
             this::tickSafely, this.schedulerIntervalMs, this.schedulerIntervalMs,
             TimeUnit.MILLISECONDS);
@@ -195,11 +193,19 @@ public final class SceneNetworkManager implements AutoCloseable {
             System.out.println(metrics);
         }
 
-        Map<Integer, Knight> actors = snapshotActors(
-            scene.sceneId, timestamp, participants);
+        Map<Integer, Knight> actors = new LinkedHashMap<>();
+        Map<ClientSession, Integer> inputTimestamps = new LinkedHashMap<>();
+        for (ClientSession session : participants) {
+            ClientSession.TickSnapshot snapshot = session.snapshotForTick(scene.sceneId, timestamp);
+            if (snapshot != null) {
+                actors.put(snapshot.actor.vw(), snapshot.actor);
+                inputTimestamps.put(session, snapshot.inputTimestamp);
+            }
+        }
         for (ClientSession session : participants) {
             try {
-                session.publishSceneTick(scene.sceneId, timestamp, actors);
+                session.publishSceneTick(scene.sceneId, timestamp, actors,
+                    inputTimestamps.getOrDefault(session, Integer.MIN_VALUE));
             } catch (Exception error) {
                 System.out.println("[NETWORK][WARNING] failed scene delta"
                     + " scene=" + scene.sceneId

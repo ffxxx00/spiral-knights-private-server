@@ -38,6 +38,7 @@ import com.threerings.presents.net.PingRequest;
 import com.threerings.presents.net.PongResponse;
 import com.threerings.presents.net.SubscribeRequest;
 import com.threerings.presents.net.Transport;
+import com.threerings.presents.net.UpdateThrottleMessage;
 import com.threerings.projectx.data.PlayerObject;
 import com.threerings.projectx.data.Pref;
 import com.threerings.projectx.data.ProjectXBootstrapData;
@@ -64,6 +65,7 @@ import com.threerings.whirled.zone.data.ZoneSummary;
 /** End-to-end protocol test for the minimal private server handshake. */
 public class TestEmulatorProtocol {
     private static final long READ_TIMEOUT_MS = 10_000L;
+    private static final MovementConfig TEST_CONFIG = MovementConfig.load();
 
     public static void main(String[] args) throws Exception {
         System.setProperty("com.threerings.io.enumPolicy", "ORDINAL");
@@ -74,6 +76,7 @@ public class TestEmulatorProtocol {
         SocketChannel client = null;
         SocketChannel friendClient = null;
         try {
+            checkSnapshotAcknowledgments(server);
             server.start();
             Thread.sleep(150L);
 
@@ -89,6 +92,11 @@ public class TestEmulatorProtocol {
             BootstrapNotification bootstrapMessage = expect(
                 wire.read(), BootstrapNotification.class, "BootstrapNotification");
             ProjectXBootstrapData bootstrap = (ProjectXBootstrapData)bootstrapMessage.yh();
+            UpdateThrottleMessage throttle = expect(wire.read(),
+                UpdateThrottleMessage.class, "client send budget negotiation");
+            check(throttle.messagesPerSec >= 1000 / Math.min(TEST_CONFIG.deltaIntervalMs,
+                    TEST_CONFIG.trainingDeltaIntervalMs) + 20,
+                "Client send budget cannot sustain input cadence and other requests");
             check(bootstrap.services != null, "Bootstrap services are null");
             checkService(bootstrap.services, ChatMarshaller.class, "ChatMarshaller");
             checkService(bootstrap.services, SceneMarshaller.class, "SceneMarshaller");
@@ -280,7 +288,7 @@ public class TestEmulatorProtocol {
                 wire, 0, "fixed-rate preload SceneDeltaEvent");
             check(preloadTick.aeh() == initialState.QY()
                     && preloadTick.QY() > initialState.QY()
-                    && preloadTick.QY() - preloadTick.aeh() <= 100,
+                    && preloadTick.QY() - preloadTick.aeh() == TEST_CONFIG.deltaIntervalMs,
                 "Authoritative scene ticker did not advance in a small fixed step");
             check(preloadTick.aef() == 0,
                 "Preload tick acknowledged an input that was never received");
@@ -297,8 +305,8 @@ public class TestEmulatorProtocol {
                 check(chainedDelta.aeh() == latestChainedDelta.QY(),
                     "SceneDelta chain lost its exact previous reference: expected="
                         + latestChainedDelta.QY() + " actual=" + chainedDelta.aeh());
-                check(chainedDelta.QY() - chainedDelta.aeh() == 100,
-                    "SceneDelta chain did not retain the installed 100 ms cadence");
+                check(chainedDelta.QY() - chainedDelta.aeh() == TEST_CONFIG.deltaIntervalMs,
+                    "SceneDelta chain did not retain the configured Haven cadence");
                 check(chainedDelta.aef() == 0,
                     "SceneDelta acknowledged input that the server never received");
                 latestChainedDelta = chainedDelta;
@@ -324,8 +332,8 @@ public class TestEmulatorProtocol {
                 "Movement delta went backwards relative to the ordered scene chain");
             check(firstMovement.QY() > firstMovement.aeh(),
                 "Movement delta did not advance the shared scene clock");
-            check(firstMovement.QY() - firstMovement.aeh() == 100,
-                "Movement delta did not retain the installed 100 ms cadence");
+            check(firstMovement.QY() - firstMovement.aeh() == TEST_CONFIG.deltaIntervalMs,
+                "Movement delta did not retain the configured Haven cadence");
             check(firstMovement.aek() != null && firstMovement.aek().length == 1,
                 "First movement delta omitted the authoritative Knight update");
             Actor firstAuthoritativeActor =
@@ -348,13 +356,19 @@ public class TestEmulatorProtocol {
                 secondInputTimestamp,
                 new InputFrame[]{ new InputFrame(secondInputTimestamp, 0.0f, 0.0f, 1) });
             moveInput.cF(bootstrap.clientOid);
+            long movementRequestStarted = System.nanoTime();
             wire.send(new ForwardEventRequest(moveInput));
             SceneDeltaEvent movement = expectSceneDelta(
                 wire, secondInputTimestamp, "movement SceneDeltaEvent");
             check(movement.aef() == secondInputTimestamp,
                 "Movement delta did not acknowledge the latest input frame");
-            check(movement.QY() - firstMovement.QY() <= 300,
-                "Rate-limited actor state exceeded the 200 ms target plus one tick");
+            // The shared clock keeps ticking while the test inspects the prior
+            // actor. Measure from sending this request, not that earlier tick.
+            long movementResponseMs = (System.nanoTime() - movementRequestStarted) / 1_000_000L;
+            check(movementResponseMs <= Math.max(250,
+                    TEST_CONFIG.actorStateIntervalMs + 2 * TEST_CONFIG.deltaIntervalMs),
+                "Authoritative movement response arrived late: " + movementResponseMs + "ms");
+            System.out.println("[Test][LATENCY] movement response=" + movementResponseMs + "ms");
             check(movement.aek() != null && movement.aek().length == 1,
                 "Movement delta omitted the authoritative Knight update");
             Actor movedActor = (Actor)movement.aek()[0].apply(firstAuthoritativeActor);
@@ -488,20 +502,22 @@ public class TestEmulatorProtocol {
                 wire, 0, "Training Hall preload SceneDeltaEvent");
             check(trainingPreloadTick.aeh() == trainingState.QY(),
                 "Training Hall preload did not reference its initial state");
-            check(trainingPreloadTick.QY() - trainingPreloadTick.aeh() == 200,
-                "Training Hall did not use its client-safe 200 ms cadence");
+            check(trainingPreloadTick.QY() - trainingPreloadTick.aeh() == TEST_CONFIG.trainingDeltaIntervalMs,
+                "Training Hall did not use its configured cadence");
 
-            System.out.println("[Test] 8a. Verifying Training Hall emits at 5 Hz...");
+            System.out.println("[Test] 8a. Verifying Training Hall configured tick cadence...");
             List<SceneDeltaEvent> trainingRateDeltas =
                 collectSceneDeltasFor(wire, 450L);
-            check(trainingRateDeltas.size() >= 1 && trainingRateDeltas.size() <= 3,
-                "Training Hall did not stay near five reliable deltas per second; deltas="
+            int expectedTrainingDeltas = (int)(450L / TEST_CONFIG.trainingDeltaIntervalMs);
+            check(trainingRateDeltas.size() >= Math.max(1, expectedTrainingDeltas * 3 / 4)
+                    && trainingRateDeltas.size() <= expectedTrainingDeltas + 2,
+                "Training Hall did not sustain its configured cadence; deltas="
                     + trainingRateDeltas.size());
             for (SceneDeltaEvent trainingRateDelta : trainingRateDeltas) {
                 check(trainingRateDelta.aeh() == trainingPreloadTick.QY(),
                     "Training Hall rate sample broke the ordered delta chain");
-                check(trainingRateDelta.QY() - trainingRateDelta.aeh() == 200,
-                    "Training Hall rate sample did not advance 200 ms");
+                check(trainingRateDelta.QY() - trainingRateDelta.aeh() == TEST_CONFIG.trainingDeltaIntervalMs,
+                    "Training Hall rate sample did not advance its configured interval");
                 trainingPreloadTick = trainingRateDelta;
             }
 
@@ -811,6 +827,66 @@ public class TestEmulatorProtocol {
         }
     }
 
+    /** Reproduces input arriving between the shared snapshot and publication. */
+    private static void checkSnapshotAcknowledgments(SpiralServer server) throws Exception {
+        java.lang.reflect.Field managerField = SpiralServer.class.getDeclaredField("sceneMgr");
+        managerField.setAccessible(true);
+        try (SocketChannel channel = SocketChannel.open()) {
+            ClientSession session = new ClientSession(channel, null,
+                (SceneManager)managerField.get(server), null, TEST_CONFIG,
+                1, "20261006114613", 0, ignored -> {});
+            Knight actor = new Knight(new ConfigReference<>("Knight"), 101, 1,
+                new com.threerings.math.Vector2f(1f, -30.5f), 0f);
+            setSessionField(session,"authoritativeActor",actor);
+            setSessionField(session,"sceneReady",true);
+            setSessionField(session,"sceneTimestamp",1);
+            setSessionField(session,"lastInputTimestamp",100);
+            java.lang.reflect.Field sentField = ClientSession.class.getDeclaredField("lastSentActors");
+            sentField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.Map<Integer,Knight> sent = (java.util.Map<Integer,Knight>)sentField.get(session);
+            sent.put(actor.vw(),(Knight)actor.copy(null));
+            java.lang.reflect.Field queueField = ClientSession.class.getDeclaredField("outbound");
+            queueField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.concurrent.BlockingQueue<Object> queue =
+                (java.util.concurrent.BlockingQueue<Object>)queueField.get(session);
+
+            int step = Math.max(TEST_CONFIG.deltaIntervalMs,TEST_CONFIG.actorStateIntervalMs);
+            ClientSession.TickSnapshot beforeMove = session.snapshotForTick(SceneManager.DEFAULT_SCENE_ID,1+step);
+            actor.tz().x += 0.5f; actor.k(2,true);
+            setSessionField(session,"lastInputTimestamp",200);
+            session.publishSceneTick(SceneManager.DEFAULT_SCENE_ID,1+step,
+                java.util.Map.of(actor.vw(),beforeMove.actor),beforeMove.inputTimestamp);
+            SceneDeltaEvent oldState = (SceneDeltaEvent)((EventNotification)queue.remove()).yj();
+            check(oldState.aef() == 100,
+                "Snapshot acknowledged movement received after capture");
+
+            ClientSession.TickSnapshot beforeStop = session.snapshotForTick(SceneManager.DEFAULT_SCENE_ID,1+2*step);
+            actor.k(2,false); setSessionField(session,"lastInputTimestamp",300);
+            session.publishSceneTick(SceneManager.DEFAULT_SCENE_ID,1+2*step,
+                java.util.Map.of(actor.vw(),beforeStop.actor),beforeStop.inputTimestamp);
+            SceneDeltaEvent movingState = (SceneDeltaEvent)((EventNotification)queue.remove()).yj();
+            check(movingState.aef() == 200 && findActorDelta(movingState,actor.vw()) != null,
+                "Moving snapshot acknowledged release before delivering stopped state");
+
+            ClientSession.TickSnapshot stopped = session.snapshotForTick(SceneManager.DEFAULT_SCENE_ID,1+3*step);
+            session.publishSceneTick(SceneManager.DEFAULT_SCENE_ID,1+3*step,
+                java.util.Map.of(actor.vw(),stopped.actor),stopped.inputTimestamp);
+            SceneDeltaEvent stopState = (SceneDeltaEvent)((EventNotification)queue.remove()).yj();
+            ActorDelta stoppedDelta = findActorDelta(stopState,actor.vw());
+            check(stopState.aef() == 300 && stoppedDelta != null
+                    && !((Actor)stoppedDelta.apply(beforeStop.actor)).bR(2),
+                "Release acknowledgment omitted the stopped actor state");
+            System.out.println("[Test] Snapshot/input acknowledgment race, including key release: PASSED");
+        }
+    }
+
+    private static void setSessionField(ClientSession session, String name, Object value) throws Exception {
+        java.lang.reflect.Field field = ClientSession.class.getDeclaredField(name);
+        field.setAccessible(true); field.set(session,value);
+    }
+
     /** Connects another stock-protocol client directly to Haven for multiplayer tests. */
     private static JoinedClient joinHaven(int port, int requestBase) throws Exception {
         SocketChannel channel = SocketChannel.open(
@@ -1026,7 +1102,7 @@ public class TestEmulatorProtocol {
                     && ((SceneDeltaEvent)event).aef() >= minimumAcknowledge) {
                 SceneDeltaEvent delta = (SceneDeltaEvent)event;
                 int expectedIntervalMs = delta.aee() == SceneManager.TRAINING_PLACE_OID
-                    ? 200 : 100;
+                    ? TEST_CONFIG.trainingDeltaIntervalMs : TEST_CONFIG.deltaIntervalMs;
                 check(delta.QY() - delta.aeh() == expectedIntervalMs,
                     "SceneDeltaEvent broke the configured scene cadence for "
                         + description + ": " + (delta.QY() - delta.aeh()) + "ms");
