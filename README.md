@@ -1,5 +1,10 @@
 # Spiral Knights Private — versión congelada
 
+**El repositorio Git contiene fuentes y documentación; no descarga el juego ni
+Java.** Para preparar un checkout, consultar [README_GITHUB.md](README_GITHUB.md).
+Las etapas iniciales se recuperaron de respaldos y están identificadas en
+[HISTORY_RECONSTRUCTION.md](HISTORY_RECONSTRUCTION.md).
+
 Esta copia local usa la versión **20261006114613**. Tiene recursos, mapas,
 bibliotecas, Java del cliente y JDK propios. Las actualizaciones de Steam no
 modifican estos archivos. Todo el desarrollo se realiza aquí; no sincronizar
