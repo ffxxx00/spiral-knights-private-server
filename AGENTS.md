@@ -17,3 +17,13 @@ Ejecutar test_server.bat antes de declarar funcional un cambio. Deben pasar
 login, Haven, movimiento, portales, controles de combate, dos clientes y keepalive.
 No afirmar daño, persistencia ni colisiones detalladas hasta implementarlos y probarlos.
 Estado actual: adaptación compilable; prueba integral aprobada. Ver README.md.
+
+## Análisis persistente del cliente
+
+Consultar docs/REVERSE_MAP.md y tools/reverse/README.md antes de explorar un sistema.
+Usar tools/reverse/reverse.ps1 -Action Query para localizar clases, llamadas y campos.
+Fuentes e índice locales en analysis/client-20261006114613/; excluidos de Git.
+No repetir la descompilación completa si coinciden los hashes de la caché.
+Confirmar decisiones con javap y datos congelados: una fuente descompilada o una
+arista de llamada simbólica no demuestra comportamiento de servidor ni paridad.
+Registrar contrato, evidencia e incertidumbre antes de refactorizar cada sistema.

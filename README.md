@@ -5,6 +5,12 @@ Java.** Para preparar un checkout, consultar [README_GITHUB.md](README_GITHUB.md
 Las etapas iniciales se recuperaron de respaldos y están identificadas en
 [HISTORY_RECONSTRUCTION.md](HISTORY_RECONSTRUCTION.md).
 
+El [mapa de sistemas del cliente](docs/REVERSE_MAP.md) organiza contratos,
+dependencias y próximos refactores. Las [herramientas de análisis](tools/reverse/README.md)
+generan fuentes descompiladas e índice local por versión, con hashes y caché.
+Los resultados derivados del cliente quedan fuera de Git; se versionan las
+herramientas propias y la evidencia escrita para el proyecto.
+
 Esta copia local usa la versión **20261006114613**. Tiene recursos, mapas,
 bibliotecas, Java del cliente y JDK propios. Las actualizaciones de Steam no
 modifican estos archivos. Todo el desarrollo se realiza aquí; no sincronizar

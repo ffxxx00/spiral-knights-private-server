@@ -31,9 +31,16 @@
 !docs/*.ps1
 !docs/MENSAJE_PARA_TU_AMIGO.txt
 !docs/HISTORY_EVIDENCE.json
+!docs/REVERSE_INVENTORY.json
 !validation/
 !validation/*notes.md
 !validation/*.java
 !validation/*.ps1
 !validation/build-hosting-docs.py
 !validation/reconstruct-history.py
+!tools/
+!tools/reverse/
+!tools/reverse/*.py
+!tools/reverse/*.ps1
+!tools/reverse/*.md
+!tools/reverse/*.json
