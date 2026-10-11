@@ -125,6 +125,7 @@ public final class CombatWorld {
     private void execute(ActionConfig action, ConfigReference<FireActionConfig> ref,
             Actor source, LevelItem weapon, int timestamp) {
         if (action == null) return;
+        if (action instanceof ActionConfig.None) return;
         if (action instanceof ActionConfig.Compound) {
             for (ActionConfig child : ((ActionConfig.Compound)action).actions) execute(child,ref,source,weapon,timestamp);
         } else if (action instanceof DungeonActionConfig.DamageRegion) {
@@ -202,6 +203,12 @@ public final class CombatWorld {
     private void spawn(ConfigReference<ActorConfig> ref,Vector2f position,float rotation,
             Actor source,LevelItem weapon,int timestamp) {
         if (ref==null) { unsupported("unresolved spawn actor reference"); return; }
+        if (("Bullet/Sword/Burst Bullet".equals(ref.getName())
+                || "Bullet/Sword/Parts/Burst Trail".equals(ref.getName())) && weapon!=null) {
+            ItemConfig.Weapon item=(ItemConfig.Weapon)weapon.w(configs);
+            Object color=item.chargedAttack==null?null:item.chargedAttack.kW().get("Burst Color");
+            if(color!=null) {ref=ref.kX();ref.kW().f("Color",color);}
+        }
         ActorConfig actorConfig=configs.a(ActorConfig.class,ref);
         if (actorConfig==null) throw new IllegalStateException("Missing spawned actor "+ref);
         ActorConfig.Original config=actorConfig.ai(configs);
@@ -229,6 +236,23 @@ public final class CombatWorld {
             detonation=bomb.detonationAction;
         }
         spawned.put(actor.vw(),new SpawnedActor(actor,weapon,timestamp,expiry,detonation));
+        SpawnedActor state=spawned.get(actor.vw());
+        if ("Bullet/Sword/Burst Bullet".equals(ref.getName())) {
+            state.burstRemaining=number(ref.kW().get("Burst Count"),0);
+            for (Timer timer:state.timers) {
+                if (!(timer.config.action instanceof ActionConfig.Conditional)) continue;
+                ActionConfig branch=((ActionConfig.Conditional)timer.config.action).action;
+                if (!(branch instanceof ActionConfig.Compound)) continue;
+                for (ActionConfig child:((ActionConfig.Compound)branch).actions)
+                    if(child instanceof ActionConfig.SpawnActor) state.burstAction=child;
+            }
+            // Client-only templates omit the server variable/tick handler. The
+            // local compatibility cadence is explicit, not claimed as vanilla.
+            state.burstInterval=burstInterval();
+            state.nextBurst=timestamp;
+            state.timers.clear();
+            System.out.println("[COMBAT] charged burst count="+state.burstRemaining+" intervalMs="+state.burstInterval);
+        }
         System.out.println("[COMBAT] spawn actor="+actor.vw()+" config="+ref.getName()+" time="+timestamp);
     }
 
@@ -271,6 +295,11 @@ public final class CombatWorld {
             }
             state.lastTick=timestamp;
             if (state.destroyedAt!=Integer.MAX_VALUE) continue;
+            if (state.burstAction!=null && timestamp>=state.nextBurst && state.burstRemaining>0) {
+                execute(state.burstAction,null,actor,state.weapon,timestamp);
+                state.burstRemaining--; state.nextBurst=timestamp+state.burstInterval;
+                if(state.burstRemaining==0) state.destroy(timestamp);
+            }
             if (timestamp>=state.expiresAt) {
                 if (actor instanceof Bullet) ((Bullet)actor).ci(true);
                 else execute(state.detonation,null,actor,state.weapon,timestamp);
@@ -285,6 +314,21 @@ public final class CombatWorld {
                 }
             }
         }
+    }
+
+    private static int number(Object value,int fallback) {
+        if(value instanceof Number)return Math.max(0,((Number)value).intValue());
+        if(value instanceof String)try{return Math.max(0,Integer.parseInt((String)value));}catch(NumberFormatException ignored){}
+        return fallback;
+    }
+    private static int burstInterval() {
+        java.util.Properties properties=new java.util.Properties();
+        try(java.io.InputStream input=new java.io.FileInputStream("server/server.properties")) {
+            properties.load(input);
+            int value=Integer.parseInt(properties.getProperty("combat.burstIntervalMs","100"));
+            if(value<20 || value>1000) throw new IllegalArgumentException("combat.burstIntervalMs must be 20..1000");
+            return value;
+        } catch(java.io.IOException error) { throw new IllegalStateException(error); }
     }
 
     private float damage(DamageConfig damage, TrainingTarget target, LevelItem weapon) {
@@ -315,7 +359,16 @@ public final class CombatWorld {
         float attack = configs.a(DepthScaleConfig.class,scaled.depthScale).a(configs,0,item.rarity);
         if (scaled instanceof DamageConfig.DepthScaleMulti) {
             DamageConfig.DepthScaleMulti multi=(DamageConfig.DepthScaleMulti)scaled;
-            float split=configs.a(DepthScaleConfig.class,multi.splitDepth).a(configs,0,item.rarity);
+            float split;
+            if (multi.splitDepth != null) split=configs.a(DepthScaleConfig.class,multi.splitDepth).a(configs,0,item.rarity);
+            else {
+                float primary=0,secondary=0;
+                for(ItemConfig.AttackValue rating:item.attackValues) {
+                    if(rating.damageType==multi.type)primary=rating.a(configs,item,0);
+                    if(rating.damageType==multi.type2)secondary=rating.a(configs,item,0);
+                }
+                split=DamageSummary.t(primary,secondary);
+            }
             if (!Float.isFinite(split) || split<0 || split>1) throw new IllegalStateException("Invalid native damage split "+split);
             return defended(attack*(1-split),scaled.type,target,weapon,item)
                 +defended(attack*split,multi.type2,target,weapon,item);
@@ -378,6 +431,8 @@ public final class CombatWorld {
         final Actor actor; final LevelItem weapon; final int expiresAt;
         final ActionConfig detonation; final List<Timer> timers=new ArrayList<>();
         int lastTick,destroyedAt=Integer.MAX_VALUE;
+        int burstRemaining,burstInterval,nextBurst;
+        ActionConfig burstAction;
         SpawnedActor(Actor actor,LevelItem weapon,int timestamp,int expiresAt,ActionConfig detonation) {
             this.actor=actor; this.weapon=weapon; this.lastTick=timestamp;
             this.expiresAt=expiresAt; this.detonation=detonation;

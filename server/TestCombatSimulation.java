@@ -26,11 +26,13 @@ public final class TestCombatSimulation {
             }
             Field field=ClientSession.class.getDeclaredField("playerObject"); field.setAccessible(true);
             PlayerObject player=(PlayerObject)field.get(session);
+            checkEquipment(scene,player);
             checkMelee(scene,player);
             checkMissAndCancellation(scene,player);
             checkProjectile(scene,player);
             checkBomb(scene,player);
             checkNativeControls(scene,player);
+            checkSwordCharges(scene,player);
         }
         System.out.println("FROZEN VANILLA COMBAT SIMULATION TEST PASSED");
     }
@@ -149,13 +151,105 @@ public final class TestCombatSimulation {
         controller.input(new DungeonInputFrame(1021,0f,0f,DungeonInputFrame.au(0,2),1021));
         check(pawn.Ri().Mv().getName().equals("Weapon/Handgun/Polaris"),"Weapon switch failed after native recovery");
         controller.input(new DungeonInputFrame(1041,0f,0f,DungeonInputFrame.au(1,2),1021));
+        float beforeMovement=pawn.tz().x;
         controller.tick(1061);
+        check(pawn.tz().x>beforeMovement,"Native combat controller marked walking without moving");
         float stopped=pawn.tz().x;
         controller.input(new DungeonInputFrame(1081,0f,0f,DungeonInputFrame.au(0,2),1081));
         stopped=pawn.tz().x;
         controller.tick(1101); controller.tick(1121);
         check(pawn.tz().x==stopped,"Native combat movement kept sliding after key release");
         System.out.println("[CombatTest] native recovery, weapon switching, movement stop passed");
+    }
+
+    private static void checkEquipment(SceneManager scene,PlayerObject player) {
+        check(player.rank.equals(com.threerings.projectx.mission.data.MissionCodes.bAR),"Maximum native rank missing");
+        java.util.Set<String> names=new java.util.HashSet<>();
+        for(com.threerings.projectx.item.data.Item item:player.items) {
+            check(names.add(item.Mv().getName()),"Duplicate arsenal item");
+            check(scene.resolveItemConfig(item)!=null,"Unresolved inventory configuration");
+        }
+        for(com.threerings.config.ManagedConfig entry:scene.getConfigManager().bd(com.threerings.projectx.item.config.ItemConfig.class).kL()) {
+            com.threerings.projectx.item.config.ItemConfig config=scene.getConfigManager().d(com.threerings.projectx.item.config.ItemConfig.class,entry.getName());
+            if(config==null || !config.creatable) continue;
+            com.threerings.projectx.item.config.ItemConfig.Original original=config.w(scene.getConfigManager());
+            if(original instanceof com.threerings.projectx.item.config.ItemConfig.Sword
+                    || original instanceof com.threerings.projectx.item.config.ItemConfig.Handgun
+                    || original instanceof com.threerings.projectx.item.config.ItemConfig.Bomb)
+                check(names.contains(entry.getName()),"Frozen weapon missing: "+entry.getName());
+        }
+        long helmet=player.equipment[0],armor=player.equipment[1];
+        check(scene.resolveItemConfig(findItem(player,helmet)) instanceof com.threerings.projectx.item.config.ItemConfig.Helm,"Helmet slot reversed");
+        check(scene.resolveItemConfig(findItem(player,armor)) instanceof com.threerings.projectx.item.config.ItemConfig.Armor,"Armor slot reversed");
+        check("True".equals(scene.createPlayerModel(player).kW().get("Shield Away")),"Town shield policy changed");
+        check("False".equals(scene.createPlayerModel(player,0).kW().get("Shield Away")),"Combat shield still on back");
+        check(!scene.createPlayerModel(player,0).kW().containsKey("Shield"),"Base combat model duplicates the sprite shield");
+        scene.moveEquipment(player,helmet,com.threerings.projectx.item.data.ItemCodes.Location.ARSENAL,-1);
+        check(player.equipment[0]==0,"Helmet unequip failed");
+        scene.moveEquipment(player,helmet,com.threerings.projectx.item.data.ItemCodes.Location.EQUIPMENT,0);
+        try {
+            scene.moveEquipment(player,armor,com.threerings.projectx.item.data.ItemCodes.Location.EQUIPMENT,0);
+            throw new AssertionError("Armor accepted in helmet slot");
+        } catch(IllegalArgumentException expected) { }
+        check(player.equipment[1]==armor && player.equipment[0]==helmet,"Rejected equip mutated slots");
+        Dungeoneer pawn=(Dungeoneer)scene.createPlayerKnight(player,1,294,0,0);
+        scene.equipCombatWeapon(pawn,player,2);
+        VanillaCombatController controller=new VanillaCombatController(scene,player,pawn,1);
+        check(controller.weaponIndex()==2,"Controller lost the equipped weapon slot");
+        long shield=player.equipment[2],weapon=player.equipment[8];
+        pawn.aU(292,21);
+        scene.moveEquipment(player,shield,com.threerings.projectx.item.data.ItemCodes.Location.ARSENAL,-1);
+        scene.refreshCombatEquipment(pawn,player,2,41);
+        check(pawn.Rk()==null && pawn.adU()==0 && pawn.adV()!=21,"Shield removal kept stale shield or attack state");
+        scene.moveEquipment(player,shield,com.threerings.projectx.item.data.ItemCodes.Location.EQUIPMENT,2);
+        scene.moveEquipment(player,weapon,com.threerings.projectx.item.data.ItemCodes.Location.ARSENAL,-1);
+        scene.refreshCombatEquipment(pawn,player,2,61);
+        check(pawn.Ri()==null && pawn.Rk()!=null,"Unarmed combat equipment did not refresh");
+        scene.moveEquipment(player,weapon,com.threerings.projectx.item.data.ItemCodes.Location.EQUIPMENT,8);
+        scene.refreshCombatEquipment(pawn,player,2,81);
+        check(pawn.Ri()!=null && pawn.Ri().VA()==weapon,"Active combat weapon could not be reequipped");
+        System.out.println("[CombatTest] complete arsenal, native slots, max rank, shield and equipment passed");
+    }
+
+    private static com.threerings.projectx.item.data.Item findItem(PlayerObject player,long id) {
+        for(com.threerings.projectx.item.data.Item item:player.items) if(item.VA()==id)return item;
+        throw new AssertionError("Inventory item absent");
+    }
+
+    private static void checkSwordCharges(SceneManager scene,PlayerObject player) {
+        long original=player.equipment[6];
+        for(String name:new String[]{"Weapon/Sword/Leviathan Blade","Weapon/Sword/Combuster"}) {
+            for(com.threerings.projectx.item.data.Item item:player.items)
+                if(item.Mv().getName().equals(name))player.equipment[6]=item.VA();
+            CombatWorld world=newWorld(scene);
+            Monster target=firstTarget(world);
+            Dungeoneer pawn=pawn(scene,player,target,name.endsWith("Combuster")?5f:1f);
+            VanillaCombatController controller=new VanillaCombatController(scene,player,pawn,1,world);
+            boolean charging=false,charged=false,chargedDamage=false;
+            java.util.Set<Integer> burstIds=new java.util.HashSet<>();
+            for(int time=21;time<=7001;time+=20) {
+                int flags=time<=4201?4:0;
+                controller.input(new DungeonInputFrame(time,0,0,flags,flags==0?4221:21));
+                charging|=pawn.adU()==283;charged|=pawn.adU()==290;
+                for(Actor actor:world.step(time,Map.of(pawn.vw(),pawn)).values()) {
+                    if(actor.Mv().getName().equals("Bullet/Sword/Parts/Burst Trail")) {
+                        burstIds.add(actor.vw());
+                        check(java.util.Objects.equals(actor.Mv().kW().get("Color"),
+                            pawn.Rj().chargedAttack.kW().get("Burst Color")),"Charged burst lost native weapon color: actual="
+                                +actor.Mv().kW().get("Color")+" expected="+pawn.Rj().chargedAttack.kW().get("Burst Color"));
+                    }
+                    if(time>4221 && actor.vw()==target.vw() && actor instanceof Monster
+                            && ((Monster)actor).RA()<1)chargedDamage=true;
+                }
+            }
+            check(charging && charged,"Sword charge did not hold and release: "+name);
+            if(name.endsWith("Combuster")) {
+                check(burstIds.size()==5,"Combuster did not publish five charged bursts: "+burstIds.size());
+                check(chargedDamage,"Combuster charged wave did not damage a cube beyond primary melee reach");
+            }
+        }
+        player.equipment[6]=original;
+        System.out.println("[CombatTest] Leviathan and Combuster charged attacks, five burst actors passed");
     }
 
     private static CombatWorld newWorld(SceneManager scene) {

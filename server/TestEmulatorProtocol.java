@@ -148,6 +148,14 @@ public class TestEmulatorProtocol {
             check(party.members.iterator().next().weapons.length == 4,
                 "Combat party member does not expose four weapon slots");
 
+            check(bootstrap.services.stream().anyMatch(service -> service instanceof
+                com.threerings.projectx.item.data.ItemMarshaller),"Item service absent from bootstrap");
+            long helmetId=player.equipment[0];
+            checkEquipmentRpc(wire,bootstrap.clientOid,helmetId,
+                com.threerings.projectx.item.data.ItemCodes.Location.ARSENAL,-1,39,0);
+            checkEquipmentRpc(wire,bootstrap.clientOid,helmetId,
+                com.threerings.projectx.item.data.ItemCodes.Location.EQUIPMENT,0,40,helmetId);
+
             short registeredZoneReceiverId = 7;
             EntryAddedEvent<InvocationReceiver.Registration> receiverRegistration =
                 new EntryAddedEvent<>(bootstrap.clientOid, "receivers",
@@ -495,8 +503,9 @@ public class TestEmulatorProtocol {
                 "Training Hall actor did not equip the first weapon");
             ConfigReference<?> trainingModelRef =
                 (ConfigReference<?>)trainingKnight.Mv().kW().get("Model");
-            check(trainingModelRef != null && trainingModelRef.kW().containsKey("Weapon"),
-                "Training Hall actor model omitted its visible weapon");
+            check(trainingModelRef != null && !trainingModelRef.kW().containsKey("Weapon")
+                    && !trainingModelRef.kW().containsKey("Shield"),
+                "Training Hall base model duplicates the sprite weapon/shield");
 
             SceneDeltaEvent trainingPreloadTick = expectSceneDelta(
                 wire, 0, "Training Hall preload SceneDeltaEvent");
@@ -508,7 +517,7 @@ public class TestEmulatorProtocol {
             System.out.println("[Test] 8a. Verifying Training Hall configured tick cadence...");
             // The initial state now serializes the map's eleven NPCs. Consume
             // that preload backlog before measuring arrival cadence.
-            for (SceneDeltaEvent preload : collectSceneDeltasFor(wire,250L)) {
+            for (SceneDeltaEvent preload : collectSceneDeltasFor(wire,1250L)) {
                 check(preload.aeh()==trainingPreloadTick.QY(),"Training preload broke delta chain");
                 check(preload.QY()-preload.aeh()==TEST_CONFIG.trainingDeltaIntervalMs,
                     "Training preload changed the configured tick step");
@@ -523,7 +532,8 @@ public class TestEmulatorProtocol {
             int measuredClockAdvance=measuredNetwork.currentTimestamp(SceneManager.TRAINING_SCENE_ID)-measuredClockStart;
             int expectedTrainingDeltas = (int)(measuredWallMs / TEST_CONFIG.trainingDeltaIntervalMs);
             check(Math.abs(measuredClockAdvance-measuredWallMs)<=TEST_CONFIG.trainingDeltaIntervalMs*3L,
-                "Authoritative Training clock did not follow elapsed wall time");
+                "Authoritative Training clock did not follow elapsed wall time: clock="
+                    +measuredClockAdvance+" wall="+measuredWallMs);
             check(trainingRateDeltas.size() >= Math.max(1, expectedTrainingDeltas * 3 / 4),
                 "Training Hall did not sustain its configured cadence; deltas="
                     + trainingRateDeltas.size());
@@ -585,8 +595,9 @@ public class TestEmulatorProtocol {
                 "Weapon slot 3 did not equip Polaris");
             ConfigReference<?> polarisModel =
                 (ConfigReference<?>)polarisKnight.Mv().kW().get("Model");
-            check(polarisModel != null && polarisModel.kW().get("Weapon") != null,
-                "Weapon switch did not update the visible weapon model");
+            check(polarisModel != null && !polarisModel.kW().containsKey("Weapon")
+                    && !polarisModel.kW().containsKey("Shield"),
+                "Weapon switch restored duplicated base model attachments");
 
             Thread.sleep(400L);
             int handgunAttackTimestamp = 4_100;
@@ -1275,6 +1286,33 @@ public class TestEmulatorProtocol {
             Object value, Class<T> type, String description) {
         EventNotification notification = expect(value, EventNotification.class, description);
         return expect(notification.yj(), type, description);
+    }
+
+    private static void checkEquipmentRpc(Wire wire,int oid,long item,
+            com.threerings.projectx.item.data.ItemCodes.Location location,int slot,
+            int requestId,long expectedHelmet) throws Exception {
+        InvocationMarshaller.ConfirmMarshaller listener=new InvocationMarshaller.ConfirmMarshaller();
+        listener.requestId=(short)requestId;
+        InvocationRequestEvent request=new InvocationRequestEvent(oid,ClientSession.ITEM_SERVICE_CODE,9,
+            new Object[]{Long.valueOf(item),location,Integer.valueOf(slot),listener});
+        request.cF(oid);wire.send(new ForwardEventRequest(request));
+        boolean equipment=false,quickbar=false,members=false;
+        for(int i=0;i<8;i++) {
+            EventNotification notification=expect(wire.read(),EventNotification.class,"Equipment RPC event");
+            DEvent event=notification.yj();
+            if(event instanceof com.threerings.presents.dobj.AttributeChangedEvent) {
+                com.threerings.presents.dobj.AttributeChangedEvent changed=(com.threerings.presents.dobj.AttributeChangedEvent)event;
+                if(changed.getName().equals("equipment")) {
+                    check(((long[])changed.getValue())[0]==expectedHelmet,"Equipment RPC did not change helmet");equipment=true;
+                }
+                quickbar|=changed.getName().equals("quickbar");members|=changed.getName().equals("members");
+            } else if(event instanceof InvocationResponseEvent) {
+                InvocationResponseEvent response=(InvocationResponseEvent)event;
+                check(response.yf()==requestId && response.yc()==1,"Equipment RPC was rejected");
+                check(equipment && quickbar && members,"Equipment RPC omitted replicated state");return;
+            }
+        }
+        throw new AssertionError("Equipment RPC confirmation missing");
     }
 
     private static void check(boolean condition, String message) {

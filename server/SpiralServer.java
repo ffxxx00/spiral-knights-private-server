@@ -67,7 +67,7 @@ public class SpiralServer {
             + " (Scene " + SceneManager.TRAINING_SCENE_ID + " / Advanced Training)");
         System.out.println(" Combate: cubos originales + dano de espada/proyectil/bomba; paridad incompleta");
         System.out.println(" Movimiento: " + this.movementConfig.describe());
-        System.out.println(" Inventario: Armas 5 Estrellas (Leviathan, Combuster, Polaris, etc.)");
+        System.out.println(" Inventario: catalogo completo de espadas/pistolas/bombas; rango maximo 10-3");
         System.out.println(" Estado: LISTO PARA CONEXIONES");
         System.out.println("==================================================================");
 

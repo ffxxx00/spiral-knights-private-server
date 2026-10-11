@@ -64,6 +64,7 @@ public class ClientSession implements Runnable {
     public static final int CHAT_SERVICE_CODE = 4;
     public static final int SCENE_SERVICE_CODE = 5;
     public static final int ZONE_SERVICE_CODE = 6;
+    public static final int ITEM_SERVICE_CODE = 7;
     public static final int PARTY_SERVICE_CODE = 30;
     public static final int PARTY_SPEAK_SERVICE_CODE = 31;
 
@@ -242,7 +243,7 @@ public class ClientSession implements Runnable {
         this.playerObject.color = SceneManager.DEFAULT_PLAYER_COLOR;
         this.playerObject.eye = ProjectXCodes.EyeType.DEFAULT;
         this.playerObject.height = ProjectXCodes.KnightHeight.BASE;
-        this.playerObject.rank = new RankPair(10, 0);
+        this.playerObject.rank = new RankPair(com.threerings.projectx.mission.data.MissionCodes.bAR);
         this.playerObject.prestige = 50000;
         this.playerObject.crowns = 999999;
         this.playerObject.energy = 10000;
@@ -283,7 +284,7 @@ public class ClientSession implements Runnable {
 
         // Populate gear before composing the character model. The model
         // reference includes the currently equipped armor, helm and shield.
-        ItemCatalog.populateKnightInventory(this.playerObject);
+        ItemCatalog.populateKnightInventory(this.playerObject, this.sceneMgr);
 
         // Character Select Card Setup
         AvailableKnight knight = new AvailableKnight(
@@ -502,6 +503,11 @@ public class ClientSession implements Runnable {
         knightMarsh.a(this.clientOid, KNIGHT_SERVICE_CODE, null);
         bd.services.add(knightMarsh);
 
+        com.threerings.projectx.item.data.ItemMarshaller itemMarsh =
+            new com.threerings.projectx.item.data.ItemMarshaller();
+        itemMarsh.a(this.clientOid, ITEM_SERVICE_CODE, (com.threerings.presents.client.x)null);
+        bd.services.add(itemMarsh);
+
         ProjectXZoneMarshaller zoneMarsh = new ProjectXZoneMarshaller();
         zoneMarsh.a(this.clientOid, PROJECTX_ZONE_SERVICE_CODE, null);
         bd.services.add(zoneMarsh);
@@ -598,6 +604,20 @@ public class ClientSession implements Runnable {
                 if (arg instanceof InvocationMarshaller.ListenerMarshaller) {
                     InvocationMarshaller.ListenerMarshaller lm = (InvocationMarshaller.ListenerMarshaller)arg;
                     short reqId = lm.requestId;
+
+                    // Frozen ItemMarshaller method 9: move item to location/slot.
+                    if (invCode == ITEM_SERVICE_CODE && methodId == 9) {
+                        try {
+                            moveEquipment(((Number)args[0]).longValue(),
+                                (com.threerings.projectx.item.data.ItemCodes.Location)args[1],
+                                ((Number)args[2]).intValue());
+                            sendDefaultListenerResponse(reqId, lm);
+                        } catch (IllegalArgumentException error) {
+                            sendMessage(new EventNotification(new InvocationResponseEvent(
+                                this.clientOid,reqId,(byte)0,new Object[]{"m.invalid_item"})));
+                        }
+                        return;
+                    }
 
                     // 1. Whirled ZoneMarshaller moveTo(zone, scene, version)
                     if (invCode == ZONE_SERVICE_CODE || lm instanceof ZoneMarshaller.ZoneMoveMarshaller) {
@@ -697,6 +717,29 @@ public class ClientSession implements Runnable {
         } else {
             applySingleClientObjectEvent(event);
         }
+    }
+
+    private synchronized void moveEquipment(long itemId,
+            com.threerings.projectx.item.data.ItemCodes.Location location,int slot) throws IOException {
+        this.sceneMgr.moveEquipment(this.playerObject,itemId,location,slot);
+        sendMessage(new EventNotification(new AttributeChangedEvent(
+            this.clientOid,"equipment",this.playerObject.equipment.clone())));
+        sendMessage(new EventNotification(new AttributeChangedEvent(
+            this.clientOid,"quickbar",this.playerObject.quickbar.clone())));
+        if (this.authoritativeActor instanceof Dungeoneer) {
+            Dungeoneer pawn=(Dungeoneer)this.authoritativeActor;
+            int index=this.vanillaCombat==null?0:this.vanillaCombat.weaponIndex();
+            this.sceneMgr.refreshCombatEquipment(pawn,this.playerObject,index,this.sceneTimestamp);
+        } else if (this.authoritativeActor != null) {
+            this.authoritativeActor.setConfig(this.playerObject.a("Character/PC/Default",
+                this.sceneMgr.createPlayerModel(this.playerObject),new Object[0]));
+            this.authoritativeActor.init(this.sceneMgr.getConfigManager());
+        }
+        PartyMember member=new PartyMember(this.sceneMgr.getConfigManager(),this.playerObject,0,false);
+        this.partyObject.members=new DSet<>(Collections.singletonList(member));
+        sendMessage(new EventNotification(new AttributeChangedEvent(
+            this.partyObject.xL(),"members",this.partyObject.members)));
+        System.out.println("[EQUIPMENT] item="+itemId+" location="+location+" slot="+slot);
     }
 
     private void applySingleClientObjectEvent(DEvent event) {

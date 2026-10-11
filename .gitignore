@@ -29,6 +29,7 @@
 !docs/*.md
 !docs/*.html
 !docs/*.ps1
+!docs/MENSAJE_PARA_TU_AMIGO.txt
 !docs/HISTORY_EVIDENCE.json
 !validation/
 !validation/*notes.md

@@ -69,6 +69,7 @@ public class SceneManager {
     private final TownSceneConfig havenConfig;
     private final TrainingSceneConfig trainingConfig;
     private final InstalledConfigManager configManager;
+    private final List<String> weaponCatalog;
     private TudeySceneModel havenSceneModel;
     private TudeySceneModel trainingSceneModel;
     private final CombatWorld combatWorld;
@@ -85,6 +86,7 @@ public class SceneManager {
 
     public SceneManager(DObjectManager dobjMgr) {
         this.configManager = loadInstalledConfigs();
+        this.weaponCatalog = ItemCatalog.discoverWeapons(this.configManager);
         this.sceneObject = new TownSceneObject();
         this.sceneObject.cH(SCENE_OID);
         this.sceneObject.occupants = new OidList();
@@ -293,6 +295,9 @@ public class SceneManager {
             new Object[]{ "Height", player.height.value });
         player.eye.updatePlayerModelArgs(modelConfig.kW());
         for (int slot : new int[]{ 0, 1, 2 }) {
+            // DungeoneerSprite owns the live shield attachment. Sending a
+            // second shield through the base PC model duplicates it.
+            if (slot==2 && weaponIndex>=0) continue;
             long itemId = player.equipment[slot];
             Item equipped = findItem(player, itemId);
             if (equipped == null) {
@@ -306,12 +311,8 @@ public class SceneManager {
                     + equipped.Mv().getName());
             }
         }
-        LevelItem weapon = getEquippedWeapon(player, weaponIndex);
-        ItemConfig.Weapon weaponConfig = resolveWeaponConfig(weapon);
-        if (weaponConfig != null) {
-            weaponConfig.a(player.color, modelConfig.kW());
-        }
-        modelConfig.kW().f("Shield Away", "True");
+        // The combat sprite also owns the weapon drawn from Dungeoneer.Ri().
+        modelConfig.kW().f("Shield Away", weaponIndex < 0 ? "True" : "False");
         return modelConfig;
     }
 
@@ -371,6 +372,8 @@ public class SceneManager {
         return this.configManager;
     }
 
+    public List<String> getWeaponCatalog() { return this.weaponCatalog; }
+
     public CombatWorld getCombatWorld() {
         return this.combatWorld;
     }
@@ -411,6 +414,41 @@ public class SceneManager {
         actor.setConfig(player.a(COMBAT_PLAYER_ACTOR_CONFIG,
             createPlayerModel(player, weaponIndex), new Object[0]));
         actor.init(this.configManager);
+    }
+
+    public void refreshCombatEquipment(Dungeoneer actor, PlayerObject player, int weaponIndex,int timestamp) {
+        Item shield=findItem(player,player.equipment[2]);
+        actor.fe(shield==null?null:shield.Mv().getName());
+        equipCombatWeapon(actor,player,weaponIndex);
+        // Cancel an activity whose weapon/shield has just been removed.
+        actor.aU(0,Math.max(timestamp,actor.adV()+1));
+    }
+
+    public void moveEquipment(PlayerObject player,long itemId,
+            com.threerings.projectx.item.data.ItemCodes.Location location,int slot) {
+        Item item=findItem(player,itemId);
+        if (item==null) throw new IllegalArgumentException("Unknown inventory item");
+        if (location==com.threerings.projectx.item.data.ItemCodes.Location.EQUIPMENT) {
+            ItemConfig.Original config=resolveItemConfig(item);
+            int[] slots=config==null?null:config.getGroup().getSlots();
+            boolean valid=false;
+            if(slots!=null) for(int allowed:slots) if(allowed==slot) valid=true;
+            if(!valid || slot<0 || slot>=player.equipment.length
+                    || (slot>=6 && slot<=9 && slot-6>=player.weaponSlots)
+                    || (slot>=10 && slot<=11 && slot-10>=player.trinketSlots))
+                throw new IllegalArgumentException("Invalid equipment slot");
+        } else if (location!=com.threerings.projectx.item.data.ItemCodes.Location.ARSENAL
+                && location!=com.threerings.projectx.item.data.ItemCodes.Location.QUICKBAR)
+            throw new IllegalArgumentException("Unsupported inventory location");
+        if(location==com.threerings.projectx.item.data.ItemCodes.Location.QUICKBAR
+                && (slot<0 || slot>=player.quickbar.length))
+            throw new IllegalArgumentException("Invalid quickbar slot");
+        long[] equipment=player.equipment.clone(),quickbar=player.quickbar.clone();
+        for(int i=0;i<equipment.length;i++) if(equipment[i]==itemId) equipment[i]=0;
+        for(int i=0;i<quickbar.length;i++) if(quickbar[i]==itemId) quickbar[i]=0;
+        if(location==com.threerings.projectx.item.data.ItemCodes.Location.EQUIPMENT) equipment[slot]=itemId;
+        if(location==com.threerings.projectx.item.data.ItemCodes.Location.QUICKBAR) quickbar[slot]=itemId;
+        player.equipment=equipment; player.quickbar=quickbar;
     }
 
     private static Item findItem(PlayerObject player, long itemId) {

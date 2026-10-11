@@ -96,4 +96,11 @@ combos, carga, recuperación y controles. `test_server.bat` también ejecuta
 Todavía faltan estados alterados, IA, daño al jugador, reacciones, autoapuntado,
 colisiones detalladas y validación de todas las armas para afirmar paridad 1:1.
 No hay progreso persistente.
+El arsenal local reúne las 374 espadas, pistolas y bombas creables del catálogo
+congelado, a nivel 10, más cinco piezas de equipo. El rango máximo es 10-3.
+Se pueden equipar y desequipar desde el cliente; yelmo y armadura usan sus ranuras
+originales y el modelo de combate evita duplicar el escudo y el arma del sprite.
+Combuster cargada genera cinco explosiones secundarias con daño real. La cadencia
+de esa ráfaga usa compatibilidad local de 100 ms y aún necesita comparación vanilla.
+Verificación actual: `validation/test-training-equipment.log`.
 El feed social tampoco está implementado; sus paneles pueden mostrar errores. Para LAN/VPN consulta `server/README_LAN.md`.

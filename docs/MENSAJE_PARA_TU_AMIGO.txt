@@ -1,0 +1,13 @@
+Te paso la copia independiente de Spiral Knights Private, versión de datos 20261006114613, y la guía para hostearla en una PC con Windows x64.
+
+Abrí docs/MANUAL_COMPLETO.html con doble clic. Funciona sin conexión.
+
+1) Extraé la carpeta completa fuera de Steam, por ejemplo en C:\Games\SpiralKnightsPrivate.
+2) Ejecutá test_server.bat y comprobá que termina con PRIVATE SERVER WORLD-ENTRY PROTOCOL TEST PASSED.
+3) Abrí start_server.bat y esperá LISTO PARA CONEXIONES.
+4) Probá launch_client.bat en esa misma PC y elegí el personaje disponible.
+5) Para que entremos desde otra casa, seguí el apartado de VPN privada y firewall del manual; pasanos la IP VPN y el puerto (47624 por defecto).
+
+No hace falta instalar Java del sistema: viene incluido. No abras el puerto del juego directamente a Internet, porque el emulador todavía no tiene autenticación real. Es una prueba con Haven/Training y personajes por sesión, sin progreso persistente.
+
+El ZIP de documentación NO contiene el juego: necesitás también la copia completa. Si falla algo, pasame prueba-inicial.log o projectx.log y decime si falló en localhost o al conectar otro equipo.

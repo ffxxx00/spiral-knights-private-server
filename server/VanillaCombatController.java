@@ -12,19 +12,43 @@ import com.threerings.projectx.dungeon.util.i;
 import com.threerings.tudey.data.TudeySceneModel;
 import com.threerings.tudey.data.actor.Actor;
 import com.threerings.tudey.shape.Shape;
+import com.threerings.tudey.data.actor.Mobile;
 
 /** Uses the frozen game's own combat state machine instead of imitation timers. */
 public final class VanillaCombatController extends i {
     private final SceneManager scene;
     private final Dungeoneer pawn;
     private final PlayerObject player;
+    private final CombatWorld world;
     private ConfigReference<?> observedWeapon;
     private int weaponIndex;
     private int observedActivity = Integer.MIN_VALUE, observedStart = Integer.MIN_VALUE;
     public VanillaCombatController(SceneManager scene,PlayerObject player,Dungeoneer pawn,int timestamp) {
+        this(scene,player,pawn,timestamp,scene.getCombatWorld());
+    }
+    VanillaCombatController(SceneManager scene,PlayerObject player,Dungeoneer pawn,int timestamp,CombatWorld world) {
         super(new Context(scene,player,pawn),pawn,timestamp);
         this.scene=scene; this.pawn=pawn; this.player=player;
+        this.world=world;
+        initializeMovement(pawn);
         observedWeapon=pawn.Ri()==null?null:pawn.Ri().Mv();
+        for(int index=0;index<4;index++) {
+            LevelItem equipped=scene.getEquippedWeapon(player,index);
+            if(equipped!=null && java.util.Objects.equals(equipped.Mv(),observedWeapon)) {
+                weaponIndex=index;break;
+            }
+        }
+    }
+    private static void initializeMovement(Mobile pawn) {
+        // This client-only frozen Mobile has no assignment to _maxStep. The
+        // native controller clamps every integration step to zero otherwise.
+        // With the emulator's unobstructed map policy, retain the native motion
+        // without imposing an additional step-distance clamp.
+        if (pawn.aeb() != 0) return;
+        try {
+            java.lang.reflect.Field step=Mobile.class.getDeclaredField("_maxStep");
+            step.setAccessible(true); step.setFloat(pawn,Float.POSITIVE_INFINITY);
+        } catch (ReflectiveOperationException error) { throw new IllegalStateException(error); }
     }
     public void input(DungeonInputFrame frame) {
         a(frame);
@@ -54,7 +78,7 @@ public final class VanillaCombatController extends i {
         else if (activity==290) attack=AttackConfig.b(scene.getConfigManager(),pawn.Rj().chargedAttack);
         else if (activity==289) attack=AttackConfig.b(scene.getConfigManager(),pawn.Rj().incompleteChargedAttack);
         else if (activity==287) attack=AttackConfig.b(scene.getConfigManager(),pawn.y(scene.getConfigManager()).bash);
-        if (attack!=null) scene.getCombatWorld().attack(pawn,attack,started,biC);
+        if (attack!=null) this.world.attack(pawn,attack,started,biC);
         System.out.println("[COMBAT] vanilla activity="+activity+" source="+pawn.vw()+" start="+started);
     }
     public int weaponIndex() { return weaponIndex; }

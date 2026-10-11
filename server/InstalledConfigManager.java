@@ -66,6 +66,7 @@ public final class InstalledConfigManager extends ConfigManager {
                 java.util.Collections.addAll(directs,((Parameter.Choice)parameter).directs);
         }
         restoreCloudSignal(config,directs);
+        restoreBurstContainers(config,directs);
         for (Parameter.Direct parameter : directs) {
             for (String path : parameter.paths) {
                 if (!path.contains(".region.shape")) continue;
@@ -107,6 +108,38 @@ public final class InstalledConfigManager extends ConfigManager {
                     }
                 }
             }
+        }
+    }
+
+    private static void restoreBurstContainers(ManagedConfig config,List<Parameter.Direct> directs) {
+        if (!(config instanceof ActorConfig)
+                || !"Bullet/Sword/Burst Bullet".equals(config.getName())) return;
+        ActorConfig.Original actor=((ActorConfig)config).implementation instanceof ActorConfig.Original
+            ? (ActorConfig.Original)((ActorConfig)config).implementation : null;
+        if(actor==null || actor.handlers.length<3 || !(actor.handlers[1] instanceof HandlerConfig.Timer)) return;
+        boolean trailPath=false,countPath=false;
+        for(Parameter.Direct direct:directs) for(String path:direct.paths) {
+            trailPath|=path.equals("implementation.handlers[1].action.action.actions[1].actor[\"Damage\"]");
+            countPath|=path.equals("implementation.handlers[2].action.value.value");
+        }
+        if(!trailPath || !countPath) return;
+        ActionConfig action=((HandlerConfig.Timer)actor.handlers[1]).action;
+        if(!(action instanceof ActionConfig.Conditional)) return;
+        ActionConfig branch=((ActionConfig.Conditional)action).action;
+        if(!(branch instanceof ActionConfig.Compound)) return;
+        ActionConfig.Compound compound=(ActionConfig.Compound)branch;
+        if(compound.actions.length==1 && compound.actions[0] instanceof ActionConfig.SpawnActor) {
+            // Preserve the exported index of the trail: the client-only import
+            // omits the server-side counter action preceding it.
+            compound.actions=new ActionConfig[]{new ActionConfig.None(),compound.actions[0]};
+        }
+        if(actor.handlers[2] instanceof HandlerConfig.Startup
+                && ((HandlerConfig.Startup)actor.handlers[2]).action instanceof ActionConfig.SpawnActor
+                && ((ActionConfig.SpawnActor)((HandlerConfig.Startup)actor.handlers[2]).action).actor==null) {
+            ActionConfig.SetVariable count=new ActionConfig.SetVariable();
+            count.name="privateBurstCount";
+            count.value=new com.threerings.tudey.config.ExpressionConfig.Constant("0");
+            ((HandlerConfig.Startup)actor.handlers[2]).action=count;
         }
     }
 
