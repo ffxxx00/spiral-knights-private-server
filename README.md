@@ -116,3 +116,10 @@ Las balas usan su propia máscara de colisión y se detienen contra las paredes
 que les corresponden; una barrera baja puede bloquear al jugador y permitir disparos.
 Pruebas de colisión y permisos: `validation/test-clearance-collision-full.log`.
 El feed social tampoco está implementado; sus paneles pueden mostrar errores. Para LAN/VPN consulta `server/README_LAN.md`.
+
+## Reconstrucción por contratos
+
+El [plan del servidor](docs/SERVER_SIDE_PLAN.md) organiza la adaptación del motor,
+la validación con telemetría y los sistemas propios de Spiral Knights. Ver también
+la [evaluación de Clyde](docs/CLYDE_COMPATIBILITY.md) y los
+[casos locales de telemetría](docs/TELEMETRY_CASES.md).

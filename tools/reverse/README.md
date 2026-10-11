@@ -68,3 +68,29 @@ Después ejecutar `report_combat.py --root .` con el Python detectado arriba par
 validar datos y generar docs/COMBAT_ACTION_AUDIT.md. Requiere el índice ya creado.
 La auditoría sigue referencias tipadas y nodos anidados de acciones; no mide su
 ejecución ni demuestra paridad. Incluye hashes de los catálogos importados.
+
+## Telemetría y referencia de Clyde
+
+Con el mismo Python utilizado por el índice:
+
+```powershell
+python .\tools\reverse\check_clyde.py --download
+python .\tools\reverse\test_telemetry_cases.py
+python .\tools\reverse\telemetry_cases.py normalize 'C:\ruta\mission-capture.jsonl' analysis/telemetry/capture
+python .\tools\reverse\telemetry_cases.py compare analysis/expected.json analysis/actual.json
+```
+
+check_clyde.py descarga solo los ocho archivos fijados en clyde-reference.json,
+verifica SHA-256 y compara campos públicos de instancia contra el índice JVM.
+No compila ni instala el motor externo. El detalle queda en analysis/upstream/;
+el resumen propio se guarda en docs/CLYDE_COMPATIBILITY.md.
+
+normalize admite el JSONL de MissionRecorder y conserva una copia local por hash.
+No ejecuta grabadores ni agentes. Los deltas reflectivos sin identidad de clase
+se conservan opacos y se indican bloqueos para reproducción; no se inventa un
+estado de actor aplicando valores a campos desconocidos.
+
+compare recibe muestras autoritativas del mismo experimento, con hashes de inputs,
+estado inicial y cliente. Devuelve diferencias y exit code 1 cuando no coinciden;
+rechaza casos incompatibles. Todavía requiere conectar el ejecutor del servidor.
+Ver docs/TELEMETRY_CASES.md y docs/SERVER_SIDE_PLAN.md.

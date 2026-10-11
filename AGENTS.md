@@ -31,3 +31,8 @@ Para combate, consultar docs/COMBAT_ACTION_AUDIT.md y el informe local
 combat-catalog.json. CombatAudit no mide comportamiento: el cliente conserva
 placeholders y hay advertencias de binding. No deducir compatibilidad completa
 por la mera presencia o resolución de una configuración.
+Consultar docs/SERVER_SIDE_PLAN.md para la integración por contratos. La referencia
+de Clyde está fijada en tools/reverse/clyde-reference.json; no sustituir los JAR.
+La telemetría preservada en analysis/telemetry/ es evidencia offline. Las capturas
+antiguas no tienen versión/hash de cliente y sus deltas carecen de identidad de
+clase; no declarar paridad usando segmentos con replay_ready=false.

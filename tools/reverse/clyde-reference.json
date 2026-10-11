@@ -1,0 +1,55 @@
+{
+  "repository": "https://github.com/threerings/clyde",
+  "files": [
+    {
+      "sha256": "e3a92446540ef5c5a260bf18845edc3048130fdc8f98c1c68b076cdc000019f6",
+      "path": "core/src/main/java/com/threerings/tudey/config/ActionConfig.java",
+      "file": "ActionConfig.java",
+      "url": "https://raw.githubusercontent.com/threerings/clyde/8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01/core/src/main/java/com/threerings/tudey/config/ActionConfig.java"
+    },
+    {
+      "sha256": "19309755132498e9a1a80d103c34f8fbdddc58aa4d5a619f4a6159bc72f6a03c",
+      "path": "core/src/main/java/com/threerings/tudey/server/logic/ActionLogic.java",
+      "file": "ActionLogic.java",
+      "url": "https://raw.githubusercontent.com/threerings/clyde/8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01/core/src/main/java/com/threerings/tudey/server/logic/ActionLogic.java"
+    },
+    {
+      "sha256": "1704ce461be665dc45df5cabe3cccad942274d76f98c6d53e41a39a2f729ab8b",
+      "path": "core/src/main/java/com/threerings/tudey/config/ConditionConfig.java",
+      "file": "ConditionConfig.java",
+      "url": "https://raw.githubusercontent.com/threerings/clyde/8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01/core/src/main/java/com/threerings/tudey/config/ConditionConfig.java"
+    },
+    {
+      "sha256": "655b8f5f529d8df6c062d156db8cd3d4d2e08eed1fa118f728dcd305c0f4969c",
+      "path": "core/src/main/java/com/threerings/tudey/server/logic/ConditionLogic.java",
+      "file": "ConditionLogic.java",
+      "url": "https://raw.githubusercontent.com/threerings/clyde/8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01/core/src/main/java/com/threerings/tudey/server/logic/ConditionLogic.java"
+    },
+    {
+      "sha256": "2e4d05fab46b53babce3c9ef0969444c0f905821757f7de46d40f7faead43afb",
+      "path": "core/src/main/java/com/threerings/tudey/config/ExpressionConfig.java",
+      "file": "ExpressionConfig.java",
+      "url": "https://raw.githubusercontent.com/threerings/clyde/8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01/core/src/main/java/com/threerings/tudey/config/ExpressionConfig.java"
+    },
+    {
+      "sha256": "e9cb3801d5ccf1e7b1250c5c7e7ae18c272c910f953ac5493b5f22282cbd5948",
+      "path": "core/src/main/java/com/threerings/tudey/server/logic/ExpressionLogic.java",
+      "file": "ExpressionLogic.java",
+      "url": "https://raw.githubusercontent.com/threerings/clyde/8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01/core/src/main/java/com/threerings/tudey/server/logic/ExpressionLogic.java"
+    },
+    {
+      "sha256": "1598ecc87cdee66dd778f9f8e8c8bc5d9b90e24117c5c52afe98d691d5b61c4f",
+      "path": "core/src/main/java/com/threerings/tudey/config/HandlerConfig.java",
+      "file": "HandlerConfig.java",
+      "url": "https://raw.githubusercontent.com/threerings/clyde/8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01/core/src/main/java/com/threerings/tudey/config/HandlerConfig.java"
+    },
+    {
+      "sha256": "ff639df0920fed6d8ce837d3cbc0c54b8d62f984fcadf9a0bea19a970026ddb2",
+      "path": "core/src/main/java/com/threerings/tudey/server/logic/HandlerLogic.java",
+      "file": "HandlerLogic.java",
+      "url": "https://raw.githubusercontent.com/threerings/clyde/8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01/core/src/main/java/com/threerings/tudey/server/logic/HandlerLogic.java"
+    }
+  ],
+  "purpose": "Reference only; compatibility not assumed",
+  "revision": "8b0c64bb4f37b0d9af6e6b154867ffd095f4cc01"
+}
