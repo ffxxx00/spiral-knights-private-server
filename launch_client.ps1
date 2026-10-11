@@ -91,6 +91,9 @@ $classPath = @(
 if ($localMode) { $classPath = "$localClasses;$classPath" }
 
 $javaArgs = @(
+    '-XX:+UseG1GC',
+    '-XX:MaxGCPauseMillis=20',
+    '-XX:+ExplicitGCInvokesConcurrent',
     "-Dspiral.local.lowLatency=$($localMode.ToString().ToLowerInvariant())",
     "-Duser.home=$gameRoot\profile",
     '-Djava.util.prefs.PreferencesFactory=portable.LocalPreferencesFactory',
@@ -105,6 +108,9 @@ $javaArgs = @(
     '--add-opens=java.base/java.lang=ALL-UNNAMED',
     '--add-opens=java.base/java.util=ALL-UNNAMED',
     '--enable-native-access=ALL-UNNAMED',
+    # Use the FFM implementation already shipped in the frozen LWJGL JAR.
+    # It replaces deprecated sun.misc.Unsafe memory calls; warnings stay enabled.
+    '-Dorg.lwjgl.system.memoryBackend=ffm',
     '-cp',
     $classPath,
     'com.threerings.projectx.client.ProjectXApp',

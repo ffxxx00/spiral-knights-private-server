@@ -1,0 +1,46 @@
+{
+  "version": "20261006114613",
+  "frozenOn": "2026-10-09",
+  "files": [
+    {
+      "path": "code/projectx-pcode.jar",
+      "bytes": 9133145,
+      "sha256": "391A51CEF0446F55D461BDB8F942CA9DBA44E6E4138ACDCD69AB2024297F543C"
+    },
+    {
+      "path": "code/projectx-config.jar",
+      "bytes": 1478215,
+      "sha256": "E05C03DFD60264EE17538C334C7BF343644764DA0F9B242D83FB5D2B286D4312"
+    },
+    {
+      "path": "code/config.jar",
+      "bytes": 2013,
+      "sha256": "D28F8097A45DEF2F09640AA99183ACD2B4E3281DF9A6F838EE1AFAD08A0D275D"
+    },
+    {
+      "path": "scenes/1",
+      "bytes": 82299,
+      "sha256": "9009C4FB076A7BB4B1337B6E481DF84AFB9000894445C2F3CFA3FA2985650832"
+    },
+    {
+      "path": "scenes/294",
+      "bytes": 25575,
+      "sha256": "32DBBD9A0AD40BEE406DA87CADF47C215C665C7A14DC3AE30B7B20470B859773"
+    },
+    {
+      "path": "rsrc/config/actor.dat",
+      "bytes": 499806,
+      "sha256": "8722B46C183251EC68ADAC2396B47E9FDD8404035A0F62BB4EEEA6DED94F8BDE"
+    },
+    {
+      "path": "rsrc/config/item.dat",
+      "bytes": 583198,
+      "sha256": "3D3760DD18A1DF67293FAC9D18C5DE04400110F2DB738AB2547409D7F3DD56A8"
+    },
+    {
+      "path": "rsrc/config/attack.dat",
+      "bytes": 111502,
+      "sha256": "CC95EE91EEFD77CDDC9CB4F55311AEE76260EB952F5CD7D2E0113510741CB7B5"
+    }
+  ]
+}

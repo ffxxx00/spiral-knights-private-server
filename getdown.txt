@@ -1,0 +1,2 @@
+# Metadata local; esta copia no utiliza Getdown ni Steam.
+version = 20261006114613
