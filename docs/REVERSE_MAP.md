@@ -140,6 +140,14 @@ acciones que producen efectos de mundo requieren implementación autoritativa.
 CombatWorld interpreta un subconjunto; no hay que extenderlo con casos por
 nombre de arma si el catálogo declara una acción o condición común.
 
+La [auditoría del arsenal](COMBAT_ACTION_AUDIT.md) sigue las 374 armas creables:
+71 tipos alcanzables y 126 armas con indicios de nodos incompletos del cliente.
+194 armas alcanzan DamageConfig.Status. La referencia concreta de Combuster llega
+a Fire 3 con intervalo de 2.000 ms y duración declarada de 4.000 a 10.000 ms.
+No confundir estos datos con el algoritmo autoritativo de aplicación de estados.
+También se detectaron tres advertencias de binding; resolución de referencias y
+aplicación de parámetros son comprobaciones distintas.
+
 El índice separa DamageConfig y sus subtipos. `DamageConfig.Status` contiene
 flags y una referencia statusCondition; sus métodos de esta copia son constructor
 y preload. `StatusConditionConfig.Fire` declara damageInterval, damageStart,

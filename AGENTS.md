@@ -27,3 +27,7 @@ No repetir la descompilación completa si coinciden los hashes de la caché.
 Confirmar decisiones con javap y datos congelados: una fuente descompilada o una
 arista de llamada simbólica no demuestra comportamiento de servidor ni paridad.
 Registrar contrato, evidencia e incertidumbre antes de refactorizar cada sistema.
+Para combate, consultar docs/COMBAT_ACTION_AUDIT.md y el informe local
+combat-catalog.json. CombatAudit no mide comportamiento: el cliente conserva
+placeholders y hay advertencias de binding. No deducir compatibilidad completa
+por la mera presencia o resolución de una configuración.

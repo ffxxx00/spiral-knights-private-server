@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Setup','Decompile','Index','Query')][string]$Action='Query',
+    [ValidateSet('Setup','Decompile','Index','Query','CombatAudit')][string]$Action='Query',
     [string[]]$QueryArgs=@('stats'),
     [string]$Python='',
     [switch]$Force
@@ -69,6 +69,16 @@ try {
             $interpreter=Find-Python
             & $interpreter (Join-Path $PSScriptRoot 'index_client.py') @QueryArgs --root $taskRoot
             if($LASTEXITCODE -ne 0) {throw "Query failed: $LASTEXITCODE"}
+        }
+        CombatAudit {
+            Check-FrozenInputs
+            $classes=Join-Path $output 'audit-classes'
+            New-Item -ItemType Directory -Force -Path $classes | Out-Null
+            $classpath='code/projectx-pcode.jar;code/commons-logging.jar;code/commons-beanutils.jar;code/commons-digester.jar'
+            & (Join-Path $taskRoot 'jdk/bin/javac.exe') --release 17 -cp $classpath -d $classes server/InstalledConfigManager.java server/ItemCatalog.java server/SceneManager.java (Join-Path $PSScriptRoot 'InspectCombatCatalog.java') -sourcepath .
+            if($LASTEXITCODE -ne 0) {throw "Combat auditor compilation failed: $LASTEXITCODE"}
+            & $java '-Xmx768m' -cp "$classes;$classpath" server.InspectCombatCatalog (Join-Path $output 'combat-catalog.json') 2> (Join-Path $output 'combat-import.log')
+            if($LASTEXITCODE -ne 0) {throw "Combat auditor failed: $LASTEXITCODE"}
         }
     }
 } finally {Pop-Location}

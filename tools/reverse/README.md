@@ -58,3 +58,13 @@ Para verificar una conclusión:
 No copiar una fuente descompilada directamente al emulador sin verificar el
 contrato. Los catálogos se inspeccionan con BinaryImporter/InstalledConfigManager;
 no se ejecutan clases del juego para construir el índice. Ver docs/REVERSE_MAP.md.
+
+Para el grafo de combate de todas las armas, ejecutar `-Action CombatAudit`.
+Esta acción sí importa los catálogos con el importador del servidor local; no
+inicia escenas, sockets ni el juego. Compila el auditor y sus dependencias en
+analysis/client-<versión>/audit-classes, sin sustituir los .class del servidor.
+Guarda combat-catalog.json y combat-import.log únicamente en analysis/.
+Después ejecutar `report_combat.py --root .` con el Python detectado arriba para
+validar datos y generar docs/COMBAT_ACTION_AUDIT.md. Requiere el índice ya creado.
+La auditoría sigue referencias tipadas y nodos anidados de acciones; no mide su
+ejecución ni demuestra paridad. Incluye hashes de los catálogos importados.

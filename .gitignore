@@ -44,3 +44,4 @@
 !tools/reverse/*.ps1
 !tools/reverse/*.md
 !tools/reverse/*.json
+!tools/reverse/*.java
