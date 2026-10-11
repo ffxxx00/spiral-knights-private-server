@@ -216,7 +216,7 @@ public final class SceneNetworkManager implements AutoCloseable {
         for (ClientSession session : participants) {
             Knight actor = session.snapshotActorForTick(sceneId, timestamp);
             if (actor != null) {
-                actors.put(actor.vx(), actor);
+                actors.put(actor.vw(), actor);
             }
         }
         return actors;

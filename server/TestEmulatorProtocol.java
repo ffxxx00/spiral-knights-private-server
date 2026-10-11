@@ -39,6 +39,7 @@ import com.threerings.presents.net.PongResponse;
 import com.threerings.presents.net.SubscribeRequest;
 import com.threerings.presents.net.Transport;
 import com.threerings.projectx.data.PlayerObject;
+import com.threerings.projectx.data.Pref;
 import com.threerings.projectx.data.ProjectXBootstrapData;
 import com.threerings.projectx.data.ProjectXOccupantInfo;
 import com.threerings.projectx.data.ProjectXSceneObject;
@@ -81,13 +82,13 @@ public class TestEmulatorProtocol {
             Wire wire = new Wire(client);
 
             System.out.println("[Test] 1. Authenticating...");
-            wire.send(new AuthRequest(null, "20260828143805", new String[]{"presents", "projectx"}));
+            wire.send(new AuthRequest(null, "20261006114613", new String[]{"presents", "projectx"}));
             AuthResponse auth = expect(wire.read(), AuthResponse.class, "AuthResponse");
-            check("success".equals(auth.yf().code), "Authentication did not return success");
+            check("success".equals(auth.yg().code), "Authentication did not return success");
 
             BootstrapNotification bootstrapMessage = expect(
                 wire.read(), BootstrapNotification.class, "BootstrapNotification");
-            ProjectXBootstrapData bootstrap = (ProjectXBootstrapData)bootstrapMessage.yg();
+            ProjectXBootstrapData bootstrap = (ProjectXBootstrapData)bootstrapMessage.yh();
             check(bootstrap.services != null, "Bootstrap services are null");
             checkService(bootstrap.services, ChatMarshaller.class, "ChatMarshaller");
             checkService(bootstrap.services, SceneMarshaller.class, "SceneMarshaller");
@@ -102,21 +103,23 @@ public class TestEmulatorProtocol {
             wire.send(new SubscribeRequest(bootstrap.clientOid));
             ObjectResponse<?> playerResponse = expect(
                 wire.read(), ObjectResponse.class, "PlayerObject ObjectResponse");
-            DObject object = playerResponse.yj();
+            DObject object = playerResponse.yk();
             check(object instanceof PlayerObject,
                 "Expected PlayerObject, got " + object.getClass().getName());
             PlayerObject player = (PlayerObject)object;
             check(player.color == SceneManager.DEFAULT_PLAYER_COLOR,
                 "PlayerObject does not use the installed starter player color");
             checkInstalledColor(player.color);
+            check(player.MO() == ((Boolean)Pref.PARTY_WITH_ANY.defValue).booleanValue(),
+                "OptionsDialog cannot read the frozen client's default party preference");
             check(player.availableKnights != null && player.availableKnights.length == 1,
                 "PlayerObject does not expose one selectable knight");
             check("character/pc/model_level.dat".equals(
                     player.availableKnights[0].model.getName()),
                 "Character card does not use the complete animated PC model");
-            check(player.availableKnights[0].model.kX().containsKey("Face Texture"),
+            check(player.availableKnights[0].model.kW().containsKey("Face Texture"),
                 "Character card model omitted the configured eye texture");
-            check(player.availableKnights[0].model.kX().size() > 3,
+            check(player.availableKnights[0].model.kW().size() > 3,
                 "Character card model omitted equipped armor/helm/shield parameters");
             check(player.items != null && !player.items.isEmpty(), "Player inventory is empty");
             for (Item item : player.items) {
@@ -126,9 +129,9 @@ public class TestEmulatorProtocol {
             wire.send(new SubscribeRequest(player.partyOid));
             ObjectResponse<?> partyResponse = expect(
                 wire.read(), ObjectResponse.class, "PartyObject ObjectResponse");
-            check(partyResponse.yj() instanceof PartyObject,
+            check(partyResponse.yk() instanceof PartyObject,
                 "Combat party subscription did not return PartyObject");
-            PartyObject party = (PartyObject)partyResponse.yj();
+            PartyObject party = (PartyObject)partyResponse.yk();
             check(party.partyService != null && party.speakService != null,
                 "Combat PartyObject omitted required services");
             check(party.members.size() == 1 && party.health.size() == 1
@@ -165,17 +168,17 @@ public class TestEmulatorProtocol {
 
             InvocationResponseEvent selectResponse = expectEvent(
                 wire.read(), InvocationResponseEvent.class, "selectKnight response");
-            check(selectResponse.ye() == 41 && selectResponse.yb() == 1,
+            check(selectResponse.yf() == 41 && selectResponse.yc() == 1,
                 "Unexpected selectKnight confirmation");
 
             InvocationNotificationEvent moveNotification = expectEvent(
                 wire.read(), InvocationNotificationEvent.class, "zone move notification");
-            check(moveNotification.yb() == 1, "Unexpected zone notification method");
-            check(moveNotification.ya() == registeredZoneReceiverId,
+            check(moveNotification.yc() == 1, "Unexpected zone notification method");
+            check(moveNotification.yb() == registeredZoneReceiverId,
                 "Server ignored the client's registered ZoneDirector receiver id");
-            check(moveNotification.yc().length == 2,
+            check(moveNotification.yd().length == 2,
                 "Zone notification did not contain zone and scene ids");
-            Object[] moveArgs = moveNotification.yc();
+            Object[] moveArgs = moveNotification.yd();
             check(moveArgs[0].equals(Integer.valueOf(1)),
                 "Zone notification contained the wrong zone id");
             check(moveArgs[1].equals(Integer.valueOf(SceneManager.DEFAULT_SCENE_ID)),
@@ -196,9 +199,9 @@ public class TestEmulatorProtocol {
 
             InvocationResponseEvent zoneResponse = expectEvent(
                 wire.read(), InvocationResponseEvent.class, "ZoneMarshaller response");
-            check(zoneResponse.ye() == 42 && zoneResponse.yb() == 3,
+            check(zoneResponse.yf() == 42 && zoneResponse.yc() == 3,
                 "Zoned move did not return gotPlace with a SceneModel");
-            Object[] zoneArgs = zoneResponse.yc();
+            Object[] zoneArgs = zoneResponse.yd();
             check(zoneArgs.length == 4, "Zoned move response has the wrong argument count");
             check(zoneArgs[0].equals(Integer.valueOf(SceneManager.SCENE_OID)),
                 "Zoned move returned the wrong place OID");
@@ -209,14 +212,14 @@ public class TestEmulatorProtocol {
             check(zoneArgs[3] instanceof TudeySceneModel, "Zoned move omitted TudeySceneModel");
             check(((TudeySceneModel)zoneArgs[3]).sceneId == SceneManager.DEFAULT_SCENE_ID,
                 "Zoned move returned a SceneModel with a mismatched scene id");
-            check(((TudeySceneModel)zoneArgs[3]).adr().size() > 1_000,
+            check(((TudeySceneModel)zoneArgs[3]).adH().size() > 1_000,
                 "Haven SceneModel contains no usable map geometry");
 
             System.out.println("[Test] 5. Subscribing to TownSceneObject...");
             wire.send(new SubscribeRequest(SceneManager.SCENE_OID));
             ObjectResponse<?> sceneResponse = expect(
                 wire.read(), ObjectResponse.class, "TownSceneObject ObjectResponse");
-            DObject sceneObject = sceneResponse.yj();
+            DObject sceneObject = sceneResponse.yk();
             check(sceneObject instanceof TownSceneObject,
                 "Expected TownSceneObject, got " + sceneObject.getClass().getName());
             TownSceneObject scene = (TownSceneObject)sceneObject;
@@ -240,48 +243,48 @@ public class TestEmulatorProtocol {
 
             SceneDeltaEvent initialState = expectEvent(
                 wire.read(), SceneDeltaEvent.class, "initial Tudey SceneDeltaEvent");
-            check(initialState.xG() == bootstrap.clientOid,
+            check(initialState.xH() == bootstrap.clientOid,
                 "Initial scene state targeted the wrong ClientObject");
-            check(initialState.adO() == SceneManager.SCENE_OID,
+            check(initialState.aee() == SceneManager.SCENE_OID,
                 "Initial scene state contained the wrong scene object OID");
-            check(initialState.adR() == 0,
+            check(initialState.aeh() == 0,
                 "First scene delta did not reference the client's initial record");
-            check(initialState.QU() > initialState.adR(),
+            check(initialState.QY() > initialState.aeh(),
                 "Initial scene state timestamp did not advance");
-            check(initialState.adT() != null && initialState.adT().length == 1,
+            check(initialState.aej() != null && initialState.aej().length == 1,
                 "Initial scene state did not contain the player actor");
-            check(initialState.adT()[0] instanceof Knight,
+            check(initialState.aej()[0] instanceof Knight,
                 "Initial scene actor is not a ProjectX Knight");
-            Knight knightActor = (Knight)initialState.adT()[0];
-            check(knightActor.vx() == bootstrap.clientOid,
+            Knight knightActor = (Knight)initialState.aej()[0];
+            check(knightActor.vw() == bootstrap.clientOid,
                 "Knight actor id does not match occupant pawnId");
-            check(SceneManager.PLAYER_ACTOR_CONFIG.equals(knightActor.Mt().getName()),
+            check(SceneManager.PLAYER_ACTOR_CONFIG.equals(knightActor.Mv().getName()),
                 "Knight actor does not reference the installed player model");
-            check(knightActor.Mt().kX().get("Model") instanceof ConfigReference,
+            check(knightActor.Mv().kW().get("Model") instanceof ConfigReference,
                 "Knight actor config omitted its composed player Model parameter");
             ConfigReference<?> actorModel =
-                (ConfigReference<?>)knightActor.Mt().kX().get("Model");
+                (ConfigReference<?>)knightActor.Mv().kW().get("Model");
             check("character/pc/model_level.dat".equals(actorModel.getName()),
                 "Knight actor does not use the complete animated PC model");
-            check(actorModel.kX().containsKey("Face Texture")
-                    && actorModel.kX().containsKey("Height"),
+            check(actorModel.kW().containsKey("Face Texture")
+                    && actorModel.kW().containsKey("Height"),
                 "Knight actor model omitted appearance parameters");
-            check(actorModel.kX().size() > 3,
+            check(actorModel.kW().size() > 3,
                 "Knight actor model omitted equipped armor/helm/shield parameters");
-            check(Math.abs(knightActor.tA().x - SceneManager.HAVEN_SPAWN_X) < 0.001f
-                    && Math.abs(knightActor.tA().y - SceneManager.HAVEN_SPAWN_Y) < 0.001f,
+            check(Math.abs(knightActor.tz().x - SceneManager.HAVEN_SPAWN_X) < 0.001f
+                    && Math.abs(knightActor.tz().y - SceneManager.HAVEN_SPAWN_Y) < 0.001f,
                 "Knight actor is not positioned at Haven's default entrance");
 
             System.out.println("[Test] 7. Sending original-client movement frames...");
             SceneDeltaEvent preloadTick = expectSceneDelta(
                 wire, 0, "fixed-rate preload SceneDeltaEvent");
-            check(preloadTick.adR() == initialState.QU()
-                    && preloadTick.QU() > initialState.QU()
-                    && preloadTick.QU() - preloadTick.adR() <= 100,
+            check(preloadTick.aeh() == initialState.QY()
+                    && preloadTick.QY() > initialState.QY()
+                    && preloadTick.QY() - preloadTick.aeh() <= 100,
                 "Authoritative scene ticker did not advance in a small fixed step");
-            check(preloadTick.adP() == 0,
+            check(preloadTick.aef() == 0,
                 "Preload tick acknowledged an input that was never received");
-            check(preloadTick.adU() == null,
+            check(preloadTick.aek() == null,
                 "Preload tick invented an authoritative actor update");
 
             System.out.println("[Test] 7a. Verifying ordered SceneDelta chain without ACK gating...");
@@ -291,12 +294,12 @@ public class TestEmulatorProtocol {
                     + chainedDeltas.size());
             SceneDeltaEvent latestChainedDelta = preloadTick;
             for (SceneDeltaEvent chainedDelta : chainedDeltas) {
-                check(chainedDelta.adR() == latestChainedDelta.QU(),
+                check(chainedDelta.aeh() == latestChainedDelta.QY(),
                     "SceneDelta chain lost its exact previous reference: expected="
-                        + latestChainedDelta.QU() + " actual=" + chainedDelta.adR());
-                check(chainedDelta.QU() - chainedDelta.adR() == 100,
+                        + latestChainedDelta.QY() + " actual=" + chainedDelta.aeh());
+                check(chainedDelta.QY() - chainedDelta.aeh() == 100,
                     "SceneDelta chain did not retain the installed 100 ms cadence");
-                check(chainedDelta.adP() == 0,
+                check(chainedDelta.aef() == 0,
                     "SceneDelta acknowledged input that the server never received");
                 latestChainedDelta = chainedDelta;
             }
@@ -304,78 +307,80 @@ public class TestEmulatorProtocol {
             int firstInputTimestamp = 1_000;
             InputEnqueueEvent establishInputClock = new InputEnqueueEvent(
                 SceneManager.SCENE_OID,
-                latestChainedDelta.QU(),
+                latestChainedDelta.QY(),
                 firstInputTimestamp,
                 // The graphical client sends unacknowledged history newest-first.
                 new InputFrame[]{
-                    new InputFrame(firstInputTimestamp, 0.0f, 0.0f, 1),
-                    new InputFrame(900, 0.0f, 0.0f, 1)
+                    new InputFrame(firstInputTimestamp, 0.75f, 0.0f, 1),
+                    new InputFrame(900, 0.75f, 0.0f, 1)
                 });
             establishInputClock.cF(bootstrap.clientOid);
             wire.send(new ForwardEventRequest(establishInputClock));
             SceneDeltaEvent firstMovement = expectSceneDelta(
                 wire, firstInputTimestamp, "first movement SceneDeltaEvent");
-            check(firstMovement.adP() == firstInputTimestamp,
+            check(firstMovement.aef() == firstInputTimestamp,
                 "Server did not acknowledge the first input frame");
-            check(firstMovement.adR() >= latestChainedDelta.QU(),
+            check(firstMovement.aeh() >= latestChainedDelta.QY(),
                 "Movement delta went backwards relative to the ordered scene chain");
-            check(firstMovement.QU() > firstMovement.adR(),
+            check(firstMovement.QY() > firstMovement.aeh(),
                 "Movement delta did not advance the shared scene clock");
-            check(firstMovement.QU() - firstMovement.adR() == 100,
+            check(firstMovement.QY() - firstMovement.aeh() == 100,
                 "Movement delta did not retain the installed 100 ms cadence");
-            check(firstMovement.adU() != null && firstMovement.adU().length == 1,
+            check(firstMovement.aek() != null && firstMovement.aek().length == 1,
                 "First movement delta omitted the authoritative Knight update");
             Actor firstAuthoritativeActor =
-                (Actor)firstMovement.adU()[0].apply(knightActor);
-            check(Math.abs(firstAuthoritativeActor.tA().x
+                (Actor)firstMovement.aek()[0].apply(knightActor);
+            check(Math.abs(firstAuthoritativeActor.tz().x
                     - (SceneManager.HAVEN_SPAWN_X + 0.5f)) < 0.001f,
                 "Authoritative movement does not match installed actor speed=5.0; x="
-                    + firstAuthoritativeActor.tA().x);
-            check(((Knight)firstAuthoritativeActor).adE() == 0,
+                    + firstAuthoritativeActor.tz().x);
+            check(((Knight)firstAuthoritativeActor).adU() == 0,
                 "Knight did not leave its creation activity for idle/walk animation");
-            check(((Knight)firstAuthoritativeActor).adF() <= firstMovement.QU(),
+            check(Math.abs(firstAuthoritativeActor.tA() - 0.75f) < 0.001f,
+                "Actor rotation was confused with translation or movement direction");
+            check(((Knight)firstAuthoritativeActor).adV() <= firstMovement.QY(),
                 "Actor activity was scheduled on the future predictive input clock");
 
             int secondInputTimestamp = 1_100;
             InputEnqueueEvent moveInput = new InputEnqueueEvent(
                 SceneManager.SCENE_OID,
-                firstMovement.QU(),
+                firstMovement.QY(),
                 secondInputTimestamp,
                 new InputFrame[]{ new InputFrame(secondInputTimestamp, 0.0f, 0.0f, 1) });
             moveInput.cF(bootstrap.clientOid);
             wire.send(new ForwardEventRequest(moveInput));
             SceneDeltaEvent movement = expectSceneDelta(
                 wire, secondInputTimestamp, "movement SceneDeltaEvent");
-            check(movement.adP() == secondInputTimestamp,
+            check(movement.aef() == secondInputTimestamp,
                 "Movement delta did not acknowledge the latest input frame");
-            check(movement.QU() - firstMovement.QU() <= 300,
+            check(movement.QY() - firstMovement.QY() <= 300,
                 "Rate-limited actor state exceeded the 200 ms target plus one tick");
-            check(movement.adU() != null && movement.adU().length == 1,
+            check(movement.aek() != null && movement.aek().length == 1,
                 "Movement delta omitted the authoritative Knight update");
-            Actor movedActor = (Actor)movement.adU()[0].apply(firstAuthoritativeActor);
-            check(movedActor.tA().x > SceneManager.HAVEN_SPAWN_X,
+            Actor movedActor = (Actor)movement.aek()[0].apply(firstAuthoritativeActor);
+            check(movedActor.tz().x > SceneManager.HAVEN_SPAWN_X,
                 "Moving east did not advance the authoritative X position");
-            check(Math.abs(movedActor.tA().y - SceneManager.HAVEN_SPAWN_Y) < 0.001f,
+            check(Math.abs(movedActor.tz().y - SceneManager.HAVEN_SPAWN_Y) < 0.001f,
                 "Moving east unexpectedly changed the authoritative Y position: "
-                    + movedActor.tA().y);
+                    + movedActor.tz().y);
             check(movedActor.bR(2),
                 "Movement input did not set the actor's moving flag");
 
             int stopInputTimestamp = 1_150;
             InputEnqueueEvent stopInput = new InputEnqueueEvent(
                 SceneManager.SCENE_OID,
-                movement.QU(),
+                movement.QY(),
                 stopInputTimestamp,
                 new InputFrame[]{ new InputFrame(stopInputTimestamp, 0.0f, 0.0f, 0) });
             stopInput.cF(bootstrap.clientOid);
             wire.send(new ForwardEventRequest(stopInput));
             SceneDeltaEvent stopped = expectSceneDelta(
                 wire, stopInputTimestamp, "stop movement SceneDeltaEvent");
-            Actor stoppedActor = (Actor)stopped.adU()[0].apply(movedActor);
+            Actor stoppedActor = (Actor)stopped.aek()[0].apply(movedActor);
             check(!stoppedActor.bR(2),
                 "Releasing movement did not clear the actor's moving flag");
-            check(Math.abs(stoppedActor.tA().x - movedActor.tA().x) < 0.001f
-                    && Math.abs(stoppedActor.tA().y - movedActor.tA().y) < 0.001f,
+            check(Math.abs(stoppedActor.tz().x - movedActor.tz().x) < 0.001f
+                    && Math.abs(stoppedActor.tz().y - movedActor.tz().y) < 0.001f,
                 "Stop input unexpectedly moved the authoritative actor");
 
             System.out.println("[Test] 8. Resolving Haven <-> Training Hall portals...");
@@ -410,9 +415,9 @@ public class TestEmulatorProtocol {
 
             InvocationResponseEvent trainingResponse = readUntilEvent(
                 wire, InvocationResponseEvent.class, "Training Hall ZoneMarshaller response");
-            check(trainingResponse.ye() == 43 && trainingResponse.yb() == 3,
+            check(trainingResponse.yf() == 43 && trainingResponse.yc() == 3,
                 "Training Hall move did not return gotPlace with a SceneModel");
-            Object[] trainingArgs = trainingResponse.yc();
+            Object[] trainingArgs = trainingResponse.yd();
             check(trainingArgs[0].equals(Integer.valueOf(SceneManager.TRAINING_PLACE_OID)),
                 "Training Hall move returned the wrong place OID");
             check(trainingArgs[1] instanceof TrainingSceneConfig,
@@ -424,13 +429,13 @@ public class TestEmulatorProtocol {
             TudeySceneModel trainingModel = (TudeySceneModel)trainingArgs[3];
             check(trainingModel.sceneId == SceneManager.TRAINING_SCENE_ID,
                 "Training Hall SceneModel has a mismatched scene id");
-            check(trainingModel.adr().size() > 1_000,
+            check(trainingModel.adH().size() > 1_000,
                 "Training Hall SceneModel contains no usable map geometry");
 
             wire.send(new SubscribeRequest(SceneManager.TRAINING_PLACE_OID));
             ObjectResponse<?> trainingObjectResponse = expect(
                 wire.read(), ObjectResponse.class, "Training Hall scene ObjectResponse");
-            DObject trainingObject = trainingObjectResponse.yj();
+            DObject trainingObject = trainingObjectResponse.yk();
             check(trainingObject instanceof ProjectXSceneObject,
                 "Expected ProjectXSceneObject for Training Hall, got "
                     + trainingObject.getClass().getName());
@@ -458,32 +463,32 @@ public class TestEmulatorProtocol {
             wire.send(new ForwardEventRequest(trainingStateRequest));
             SceneDeltaEvent trainingState = expectEvent(
                 wire.read(), SceneDeltaEvent.class, "Training Hall initial SceneDeltaEvent");
-            check(trainingState.adO() == SceneManager.TRAINING_PLACE_OID,
+            check(trainingState.aee() == SceneManager.TRAINING_PLACE_OID,
                 "Training Hall state contained the wrong scene object OID");
-            check(trainingState.adT() != null && trainingState.adT().length == 1,
+            check(trainingState.aej() != null && trainingState.aej().length == 1,
                 "Training Hall initial state omitted the player actor");
-            check(trainingState.adT()[0] instanceof Dungeoneer,
+            check(trainingState.aej()[0] instanceof Dungeoneer,
                 "Training Hall player actor is not combat-capable Dungeoneer");
-            Dungeoneer trainingKnight = (Dungeoneer)trainingState.adT()[0];
-            check(Math.abs(trainingKnight.tA().x - SceneManager.TRAINING_SPAWN_X) < 0.001f
-                    && Math.abs(trainingKnight.tA().y - SceneManager.TRAINING_SPAWN_Y) < 0.001f,
+            Dungeoneer trainingKnight = (Dungeoneer)trainingState.aej()[0];
+            check(Math.abs(trainingKnight.tz().x - SceneManager.TRAINING_SPAWN_X) < 0.001f
+                    && Math.abs(trainingKnight.tz().y - SceneManager.TRAINING_SPAWN_Y) < 0.001f,
                 "Knight did not spawn at the Training Hall entrance");
-            check(SceneManager.COMBAT_PLAYER_ACTOR_CONFIG.equals(trainingKnight.Mt().getName()),
+            check(SceneManager.COMBAT_PLAYER_ACTOR_CONFIG.equals(trainingKnight.Mv().getName()),
                 "Training Hall actor does not use Character/PC/Level");
-            check(trainingKnight.Re() != null
+            check(trainingKnight.Ri() != null
                     && "Weapon/Sword/Leviathan Blade".equals(
-                        trainingKnight.Re().Mt().getName()),
+                        trainingKnight.Ri().Mv().getName()),
                 "Training Hall actor did not equip the first weapon");
             ConfigReference<?> trainingModelRef =
-                (ConfigReference<?>)trainingKnight.Mt().kX().get("Model");
-            check(trainingModelRef != null && trainingModelRef.kX().containsKey("Weapon"),
+                (ConfigReference<?>)trainingKnight.Mv().kW().get("Model");
+            check(trainingModelRef != null && trainingModelRef.kW().containsKey("Weapon"),
                 "Training Hall actor model omitted its visible weapon");
 
             SceneDeltaEvent trainingPreloadTick = expectSceneDelta(
                 wire, 0, "Training Hall preload SceneDeltaEvent");
-            check(trainingPreloadTick.adR() == trainingState.QU(),
+            check(trainingPreloadTick.aeh() == trainingState.QY(),
                 "Training Hall preload did not reference its initial state");
-            check(trainingPreloadTick.QU() - trainingPreloadTick.adR() == 200,
+            check(trainingPreloadTick.QY() - trainingPreloadTick.aeh() == 200,
                 "Training Hall did not use its client-safe 200 ms cadence");
 
             System.out.println("[Test] 8a. Verifying Training Hall emits at 5 Hz...");
@@ -493,9 +498,9 @@ public class TestEmulatorProtocol {
                 "Training Hall did not stay near five reliable deltas per second; deltas="
                     + trainingRateDeltas.size());
             for (SceneDeltaEvent trainingRateDelta : trainingRateDeltas) {
-                check(trainingRateDelta.adR() == trainingPreloadTick.QU(),
+                check(trainingRateDelta.aeh() == trainingPreloadTick.QY(),
                     "Training Hall rate sample broke the ordered delta chain");
-                check(trainingRateDelta.QU() - trainingRateDelta.adR() == 200,
+                check(trainingRateDelta.QY() - trainingRateDelta.aeh() == 200,
                     "Training Hall rate sample did not advance 200 ms");
                 trainingPreloadTick = trainingRateDelta;
             }
@@ -506,26 +511,26 @@ public class TestEmulatorProtocol {
                 swordAttackTimestamp, 0.0f, 0.0f, 4, swordAttackTimestamp);
             InputEnqueueEvent swordAttackInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                trainingPreloadTick.QU(),
+                trainingPreloadTick.QY(),
                 swordAttackTimestamp,
                 new InputFrame[]{ swordAttackFrame });
             swordAttackInput.cF(bootstrap.clientOid);
             wire.send(new ForwardEventRequest(swordAttackInput));
             SceneDeltaEvent swordAttackDelta = expectSceneDelta(
                 wire, swordAttackTimestamp, "Leviathan attack SceneDeltaEvent");
-            Dungeoneer attackingKnight = (Dungeoneer)swordAttackDelta.adU()[0].apply(trainingKnight);
-            check(attackingKnight.adE() == 292,
+            Dungeoneer attackingKnight = (Dungeoneer)swordAttackDelta.aek()[0].apply(trainingKnight);
+            check(attackingKnight.adU() == 292,
                 "Primary sword attack did not start ks_attack activity 292");
-            check(attackingKnight.Re() != null,
+            check(attackingKnight.Ri() != null,
                 "Primary attack delta lost the equipped weapon");
 
             int weaponSwitchTimestamp = 4_000;
-            int polarisFlags = DungeonInputFrame.at(0, 2);
+            int polarisFlags = DungeonInputFrame.au(0, 2);
             DungeonInputFrame weaponSwitchFrame = new DungeonInputFrame(
                 weaponSwitchTimestamp, 0.0f, 0.0f, polarisFlags, swordAttackTimestamp);
             InputEnqueueEvent weaponSwitchInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                swordAttackDelta.QU(),
+                swordAttackDelta.QY(),
                 weaponSwitchTimestamp,
                 new InputFrame[]{ weaponSwitchFrame });
             weaponSwitchInput.cF(bootstrap.clientOid);
@@ -533,22 +538,22 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent weaponSwitchDelta = expectSceneDelta(
                 wire, weaponSwitchTimestamp, "weapon-switch SceneDeltaEvent");
             Dungeoneer polarisKnight =
-                (Dungeoneer)weaponSwitchDelta.adU()[0].apply(attackingKnight);
-            check(polarisKnight.Re() != null
-                    && "Weapon/Handgun/Polaris".equals(polarisKnight.Re().Mt().getName()),
+                (Dungeoneer)weaponSwitchDelta.aek()[0].apply(attackingKnight);
+            check(polarisKnight.Ri() != null
+                    && "Weapon/Handgun/Polaris".equals(polarisKnight.Ri().Mv().getName()),
                 "Weapon slot 3 did not equip Polaris");
             ConfigReference<?> polarisModel =
-                (ConfigReference<?>)polarisKnight.Mt().kX().get("Model");
-            check(polarisModel != null && polarisModel.kX().get("Weapon") != null,
+                (ConfigReference<?>)polarisKnight.Mv().kW().get("Model");
+            check(polarisModel != null && polarisModel.kW().get("Weapon") != null,
                 "Weapon switch did not update the visible weapon model");
 
             int handgunAttackTimestamp = 4_100;
             DungeonInputFrame handgunAttackFrame = new DungeonInputFrame(
                 handgunAttackTimestamp, 0.0f, 0.0f,
-                DungeonInputFrame.at(4, 2), handgunAttackTimestamp);
+                DungeonInputFrame.au(4, 2), handgunAttackTimestamp);
             InputEnqueueEvent handgunAttackInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                weaponSwitchDelta.QU(),
+                weaponSwitchDelta.QY(),
                 handgunAttackTimestamp,
                 new InputFrame[]{ handgunAttackFrame });
             handgunAttackInput.cF(bootstrap.clientOid);
@@ -556,18 +561,18 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent handgunAttackDelta = expectSceneDelta(
                 wire, handgunAttackTimestamp, "Polaris attack SceneDeltaEvent");
             Dungeoneer handgunAttackKnight =
-                (Dungeoneer)handgunAttackDelta.adU()[0].apply(polarisKnight);
-            check(handgunAttackKnight.adE() == 292,
+                (Dungeoneer)handgunAttackDelta.aek()[0].apply(polarisKnight);
+            check(handgunAttackKnight.adU() == 292,
                 "Primary handgun attack did not start ks_attack activity 292");
 
             Thread.sleep(1_000L);
             int defendTimestamp = 6_000;
             DungeonInputFrame defendFrame = new DungeonInputFrame(
                 defendTimestamp, 0.0f, 0.0f,
-                DungeonInputFrame.at(64, 2), defendTimestamp);
+                DungeonInputFrame.au(64, 2), defendTimestamp);
             InputEnqueueEvent defendInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                handgunAttackDelta.QU(),
+                handgunAttackDelta.QY(),
                 defendTimestamp,
                 new InputFrame[]{ defendFrame });
             defendInput.cF(bootstrap.clientOid);
@@ -575,19 +580,19 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent defendDelta = expectSceneDelta(
                 wire, defendTimestamp, "shield defense SceneDeltaEvent");
             Dungeoneer defendingKnight =
-                (Dungeoneer)defendDelta.adU()[0].apply(handgunAttackKnight);
-            check(defendingKnight.adE() == 284,
+                (Dungeoneer)defendDelta.aek()[0].apply(handgunAttackKnight);
+            check(defendingKnight.adU() == 284,
                 "Defend input did not start ks_defense activity 284");
-            check(defendingKnight.adF() <= defendDelta.QU(),
+            check(defendingKnight.adV() <= defendDelta.QY(),
                 "Coalesced defense activity was stamped in the client's future");
 
             int bombSwitchTimestamp = 8_000;
             DungeonInputFrame bombSwitchFrame = new DungeonInputFrame(
                 bombSwitchTimestamp, 0.0f, 0.0f,
-                DungeonInputFrame.at(0, 3), defendTimestamp);
+                DungeonInputFrame.au(0, 3), defendTimestamp);
             InputEnqueueEvent bombSwitchInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                defendDelta.QU(),
+                defendDelta.QY(),
                 bombSwitchTimestamp,
                 new InputFrame[]{ bombSwitchFrame });
             bombSwitchInput.cF(bootstrap.clientOid);
@@ -595,18 +600,18 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent bombSwitchDelta = expectSceneDelta(
                 wire, bombSwitchTimestamp, "bomb-switch SceneDeltaEvent");
             Dungeoneer bombKnight =
-                (Dungeoneer)bombSwitchDelta.adU()[0].apply(defendingKnight);
-            check(bombKnight.Re() != null
-                    && "Weapon/Bomb/Ash of Agni".equals(bombKnight.Re().Mt().getName()),
+                (Dungeoneer)bombSwitchDelta.aek()[0].apply(defendingKnight);
+            check(bombKnight.Ri() != null
+                    && "Weapon/Bomb/Ash of Agni".equals(bombKnight.Ri().Mv().getName()),
                 "Weapon slot 4 did not equip Ash of Agni");
 
             int bombChargeTimestamp = 8_100;
             DungeonInputFrame bombChargeFrame = new DungeonInputFrame(
                 bombChargeTimestamp, 0.0f, 0.0f,
-                DungeonInputFrame.at(4, 3), bombChargeTimestamp);
+                DungeonInputFrame.au(4, 3), bombChargeTimestamp);
             InputEnqueueEvent bombChargeInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                bombSwitchDelta.QU(),
+                bombSwitchDelta.QY(),
                 bombChargeTimestamp,
                 new InputFrame[]{ bombChargeFrame });
             bombChargeInput.cF(bootstrap.clientOid);
@@ -614,35 +619,35 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent bombChargeDelta = expectSceneDelta(
                 wire, bombChargeTimestamp, "bomb charge SceneDeltaEvent");
             Dungeoneer chargingKnight =
-                (Dungeoneer)bombChargeDelta.adU()[0].apply(bombKnight);
-            check(chargingKnight.adE() == 283,
+                (Dungeoneer)bombChargeDelta.aek()[0].apply(bombKnight);
+            check(chargingKnight.adU() == 283,
                 "Bomb attack did not start ks_charge activity 283");
 
             Thread.sleep(3_200L);
             int bombHeldTimestamp = 11_200;
             DungeonInputFrame bombHeldFrame = new DungeonInputFrame(
                 bombHeldTimestamp, 0.0f, 0.0f,
-                DungeonInputFrame.at(4, 3), bombChargeTimestamp);
+                DungeonInputFrame.au(4, 3), bombChargeTimestamp);
             InputEnqueueEvent bombHeldInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                bombChargeDelta.QU(),
+                bombChargeDelta.QY(),
                 bombHeldTimestamp,
                 new InputFrame[]{ bombHeldFrame });
             bombHeldInput.cF(bootstrap.clientOid);
             wire.send(new ForwardEventRequest(bombHeldInput));
             SceneDeltaEvent bombHeldDelta = expectSceneDelta(
                 wire, bombHeldTimestamp, "held bomb charge SceneDeltaEvent");
-            Dungeoneer heldBombKnight = bombHeldDelta.adU() == null
+            Dungeoneer heldBombKnight = bombHeldDelta.aek() == null
                 ? chargingKnight
-                : (Dungeoneer)bombHeldDelta.adU()[0].apply(chargingKnight);
+                : (Dungeoneer)bombHeldDelta.aek()[0].apply(chargingKnight);
 
             int bombReleaseTimestamp = 11_300;
             DungeonInputFrame bombReleaseFrame = new DungeonInputFrame(
                 bombReleaseTimestamp, 0.0f, 0.0f,
-                DungeonInputFrame.at(0, 3), bombReleaseTimestamp);
+                DungeonInputFrame.au(0, 3), bombReleaseTimestamp);
             InputEnqueueEvent bombReleaseInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                bombHeldDelta.QU(),
+                bombHeldDelta.QY(),
                 bombReleaseTimestamp,
                 new InputFrame[]{ bombReleaseFrame });
             bombReleaseInput.cF(bootstrap.clientOid);
@@ -650,19 +655,19 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent bombReleaseDelta = expectSceneDelta(
                 wire, bombReleaseTimestamp, "charged bomb release SceneDeltaEvent");
             Dungeoneer releasedBombKnight =
-                (Dungeoneer)bombReleaseDelta.adU()[0].apply(heldBombKnight);
-            check(releasedBombKnight.adE() == 290,
+                (Dungeoneer)bombReleaseDelta.aek()[0].apply(heldBombKnight);
+            check(releasedBombKnight.adU() == 290,
                 "Fully charged bomb did not start ks_charge_attack activity 290");
-            check(releasedBombKnight.adF() <= bombReleaseDelta.QU(),
+            check(releasedBombKnight.adV() <= bombReleaseDelta.QY(),
                 "Coalesced charged attack was stamped in the client's future");
 
             int dodgeTimestamp = 12_300;
             DungeonInputFrame dodgeFrame = new DungeonInputFrame(
                 dodgeTimestamp, 0.0f, 0.0f,
-                DungeonInputFrame.at(1024, 3), dodgeTimestamp);
+                DungeonInputFrame.au(1024, 3), dodgeTimestamp);
             InputEnqueueEvent dodgeInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                bombReleaseDelta.QU(),
+                bombReleaseDelta.QY(),
                 dodgeTimestamp,
                 new InputFrame[]{ dodgeFrame });
             dodgeInput.cF(bootstrap.clientOid);
@@ -670,19 +675,19 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent dodgeDelta = expectSceneDelta(
                 wire, dodgeTimestamp, "dodge SceneDeltaEvent");
             Dungeoneer dodgingKnight =
-                (Dungeoneer)dodgeDelta.adU()[0].apply(releasedBombKnight);
-            check(dodgingKnight.adE() == 286,
+                (Dungeoneer)dodgeDelta.aek()[0].apply(releasedBombKnight);
+            check(dodgingKnight.adU() == 286,
                 "Dodge input did not start ks_dodge activity 286");
-            check(dodgingKnight.adF() <= dodgeDelta.QU(),
+            check(dodgingKnight.adV() <= dodgeDelta.QY(),
                 "Coalesced dodge was stamped in the client's future");
 
             int shieldBashTimestamp = 13_000;
             DungeonInputFrame shieldBashFrame = new DungeonInputFrame(
                 shieldBashTimestamp, 0.0f, 0.0f,
-                DungeonInputFrame.at(2048, 3), shieldBashTimestamp);
+                DungeonInputFrame.au(2048, 3), shieldBashTimestamp);
             InputEnqueueEvent shieldBashInput = new InputEnqueueEvent(
                 SceneManager.TRAINING_PLACE_OID,
-                dodgeDelta.QU(),
+                dodgeDelta.QY(),
                 shieldBashTimestamp,
                 new InputFrame[]{ shieldBashFrame });
             shieldBashInput.cF(bootstrap.clientOid);
@@ -690,8 +695,8 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent shieldBashDelta = expectSceneDelta(
                 wire, shieldBashTimestamp, "shield-bash SceneDeltaEvent");
             Dungeoneer bashingKnight =
-                (Dungeoneer)shieldBashDelta.adU()[0].apply(dodgingKnight);
-            check(bashingKnight.adE() == 287,
+                (Dungeoneer)shieldBashDelta.aek()[0].apply(dodgingKnight);
+            check(bashingKnight.adU() == 287,
                 "Shield-bash input did not start ks_bash activity 287");
 
             ZoneMarshaller.ZoneMoveMarshaller returnListener =
@@ -708,11 +713,11 @@ public class TestEmulatorProtocol {
             wire.send(new ForwardEventRequest(returnRequest));
             InvocationResponseEvent returnResponse = readUntilEvent(
                 wire, InvocationResponseEvent.class, "return-to-Haven ZoneMarshaller response");
-            check(returnResponse.ye() == 44 && returnResponse.yb() == 3,
+            check(returnResponse.yf() == 44 && returnResponse.yc() == 3,
                 "Return from Training Hall did not resolve Haven");
-            check(returnResponse.yc()[0].equals(Integer.valueOf(SceneManager.SCENE_OID)),
+            check(returnResponse.yd()[0].equals(Integer.valueOf(SceneManager.SCENE_OID)),
                 "Return from Training Hall used the wrong Haven place OID");
-            check(returnResponse.yc()[1] instanceof TownSceneConfig,
+            check(returnResponse.yd()[1] instanceof TownSceneConfig,
                 "Return from Training Hall omitted Haven's TownSceneConfig");
 
             InvocationRequestEvent returnStateRequest = new InvocationRequestEvent(
@@ -724,9 +729,9 @@ public class TestEmulatorProtocol {
             wire.send(new ForwardEventRequest(returnStateRequest));
             SceneDeltaEvent returnState = expectEvent(
                 wire.read(), SceneDeltaEvent.class, "return-to-Haven SceneDeltaEvent");
-            Knight returnedKnight = (Knight)returnState.adT()[0];
-            check(Math.abs(returnedKnight.tA().x - SceneManager.HAVEN_TRAINING_RETURN_X) < 0.001f
-                    && Math.abs(returnedKnight.tA().y
+            Knight returnedKnight = (Knight)returnState.aej()[0];
+            check(Math.abs(returnedKnight.tz().x - SceneManager.HAVEN_TRAINING_RETURN_X) < 0.001f
+                    && Math.abs(returnedKnight.tz().y
                         - SceneManager.HAVEN_TRAINING_RETURN_Y) < 0.001f,
                 "Knight did not return beside Haven's Training Hall doorway");
 
@@ -735,8 +740,8 @@ public class TestEmulatorProtocol {
             friendClient = friend.channel;
             check(friend.bootstrap.clientOid != bootstrap.clientOid,
                 "Two sessions received the same client/pawn OID");
-            check(friend.initialState.adT() != null
-                    && friend.initialState.adT().length == 2,
+            check(friend.initialState.aej() != null
+                    && friend.initialState.aej().length == 2,
                 "Second client did not receive both Haven actors");
             Knight friendActor = findAddedActor(
                 friend.initialState, friend.bootstrap.clientOid);
@@ -752,7 +757,7 @@ public class TestEmulatorProtocol {
             int friendInputTimestamp = 20_000;
             InputEnqueueEvent friendMovement = new InputEnqueueEvent(
                 SceneManager.SCENE_OID,
-                friend.preloadState.QU(),
+                friend.preloadState.QY(),
                 friendInputTimestamp,
                 new InputFrame[]{
                     new InputFrame(friendInputTimestamp, 0.0f, 0.0f, 1),
@@ -767,7 +772,7 @@ public class TestEmulatorProtocol {
             check(ownFriendDelta != null,
                 "Moving friend did not receive its authoritative actor delta");
             Knight movedFriend = (Knight)ownFriendDelta.apply(friendActor);
-            check(movedFriend.tA().x > friendActor.tA().x,
+            check(movedFriend.tz().x > friendActor.tz().x,
                 "Friend movement did not advance its authoritative position");
 
             SceneDeltaEvent friendMovementForHost = expectUpdatedActor(
@@ -783,10 +788,14 @@ public class TestEmulatorProtocol {
                 "friend disconnect broadcast");
 
             System.out.println("[Test] 11. Checking keepalive...");
-            PingRequest ping = new PingRequest(Transport.ars);
-            ping.c(Transport.ars);
+            PingRequest ping = new PingRequest(Transport.arz);
+            ping.c(Transport.arz);
             wire.send(ping);
-            readUntilMessage(wire, PongResponse.class, "PongResponse");
+            PongResponse pong = readUntilMessage(wire, PongResponse.class, "PongResponse");
+            check(pong.yl() >= ping.yl() && pong.ym() >= pong.yl(),
+                "Keepalive omitted the frozen client's send/receive timestamps");
+            check(pong.yn() >= 0 && pong.yn() <= pong.ym() - ping.yl(),
+                "Keepalive process delay does not fit within the round trip");
 
             System.out.println("==========================================================");
             System.out.println("   PRIVATE SERVER WORLD-ENTRY PROTOCOL TEST PASSED        ");
@@ -810,22 +819,22 @@ public class TestEmulatorProtocol {
         Wire wire = new Wire(channel);
         try {
             wire.send(new AuthRequest(
-                null, "20260828143805", new String[]{"presents", "projectx"}));
+                null, "20261006114613", new String[]{"presents", "projectx"}));
             AuthResponse auth = readUntilMessage(
                 wire, AuthResponse.class, "second-client AuthResponse");
-            check("success".equals(auth.yf().code),
+            check("success".equals(auth.yg().code),
                 "Second-client authentication did not return success");
             BootstrapNotification bootstrapMessage = readUntilMessage(
                 wire, BootstrapNotification.class, "second-client BootstrapNotification");
             ProjectXBootstrapData bootstrap =
-                (ProjectXBootstrapData)bootstrapMessage.yg();
+                (ProjectXBootstrapData)bootstrapMessage.yh();
 
             wire.send(new SubscribeRequest(bootstrap.clientOid));
             ObjectResponse<?> playerResponse = readUntilMessage(
                 wire, ObjectResponse.class, "second-client PlayerObject");
-            check(playerResponse.yj() instanceof PlayerObject,
+            check(playerResponse.yk() instanceof PlayerObject,
                 "Second client did not receive its PlayerObject");
-            PlayerObject player = (PlayerObject)playerResponse.yj();
+            PlayerObject player = (PlayerObject)playerResponse.yk();
 
             ZoneMarshaller.ZoneMoveMarshaller zoneListener =
                 new ZoneMarshaller.ZoneMoveMarshaller();
@@ -842,13 +851,13 @@ public class TestEmulatorProtocol {
             InvocationResponseEvent zoneResponse = readUntilEvent(
                 wire, InvocationResponseEvent.class,
                 "second-client Haven ZoneMarshaller response");
-            check(zoneResponse.ye() == (short)requestBase && zoneResponse.yb() == 3,
+            check(zoneResponse.yf() == (short)requestBase && zoneResponse.yc() == 3,
                 "Second-client Haven move did not include its SceneModel");
 
             wire.send(new SubscribeRequest(SceneManager.SCENE_OID));
             ObjectResponse<?> sceneResponse = readUntilMessage(
                 wire, ObjectResponse.class, "second-client TownSceneObject");
-            check(sceneResponse.yj() instanceof TownSceneObject,
+            check(sceneResponse.yk() instanceof TownSceneObject,
                 "Second client did not receive Haven's TownSceneObject");
 
             InvocationRequestEvent stateRequest = new InvocationRequestEvent(
@@ -862,7 +871,7 @@ public class TestEmulatorProtocol {
                 wire, SceneDeltaEvent.class, "second-client initial scene state");
             SceneDeltaEvent preloadState = expectSceneDelta(
                 wire, 0, "second-client preload scene state");
-            check(preloadState.adR() == initialState.QU(),
+            check(preloadState.aeh() == initialState.QY(),
                 "Second-client preload did not reference its initial state");
             return new JoinedClient(
                 channel, wire, bootstrap, player, initialState, preloadState);
@@ -873,10 +882,10 @@ public class TestEmulatorProtocol {
     }
 
     private static Knight findAddedActor(SceneDeltaEvent event, int actorId) {
-        Actor[] actors = event.adT();
+        Actor[] actors = event.aej();
         if (actors != null) {
             for (Actor actor : actors) {
-                if (actor instanceof Knight && actor.vx() == actorId) {
+                if (actor instanceof Knight && actor.vw() == actorId) {
                     return (Knight)actor;
                 }
             }
@@ -885,10 +894,10 @@ public class TestEmulatorProtocol {
     }
 
     private static ActorDelta findActorDelta(SceneDeltaEvent event, int actorId) {
-        ActorDelta[] deltas = event.adU();
+        ActorDelta[] deltas = event.aek();
         if (deltas != null) {
             for (ActorDelta delta : deltas) {
-                if (delta != null && delta.vx() == actorId) {
+                if (delta != null && delta.vw() == actorId) {
                     return delta;
                 }
             }
@@ -933,7 +942,7 @@ public class TestEmulatorProtocol {
             SceneDeltaEvent event = readUntilEvent(
                 wire, SceneDeltaEvent.class, description);
             acknowledgeSceneDelta(wire, clientOid, sceneOid, event);
-            int[] removed = event.adV();
+            int[] removed = event.ael();
             if (removed != null) {
                 for (int removedId : removed) {
                     if (removedId == actorId) {
@@ -950,7 +959,7 @@ public class TestEmulatorProtocol {
             Wire wire, int clientOid, int sceneOid, SceneDeltaEvent event)
             throws Exception {
         InputEnqueueEvent acknowledge = new InputEnqueueEvent(
-            sceneOid, event.QU(), event.QU(), new InputFrame[0]);
+            sceneOid, event.QY(), event.QY(), new InputFrame[0]);
         acknowledge.cF(clientOid);
         wire.send(new ForwardEventRequest(acknowledge));
     }
@@ -1012,15 +1021,15 @@ public class TestEmulatorProtocol {
             if (!(message instanceof EventNotification)) {
                 continue;
             }
-            DEvent event = ((EventNotification)message).yi();
+            DEvent event = ((EventNotification)message).yj();
             if (event instanceof SceneDeltaEvent
-                    && ((SceneDeltaEvent)event).adP() >= minimumAcknowledge) {
+                    && ((SceneDeltaEvent)event).aef() >= minimumAcknowledge) {
                 SceneDeltaEvent delta = (SceneDeltaEvent)event;
-                int expectedIntervalMs = delta.adO() == SceneManager.TRAINING_PLACE_OID
+                int expectedIntervalMs = delta.aee() == SceneManager.TRAINING_PLACE_OID
                     ? 200 : 100;
-                check(delta.QU() - delta.adR() == expectedIntervalMs,
+                check(delta.QY() - delta.aeh() == expectedIntervalMs,
                     "SceneDeltaEvent broke the configured scene cadence for "
-                        + description + ": " + (delta.QU() - delta.adR()) + "ms");
+                        + description + ": " + (delta.QY() - delta.aeh()) + "ms");
                 return delta;
             }
         }
@@ -1033,7 +1042,7 @@ public class TestEmulatorProtocol {
         for (int attempts = 0; attempts < 512; attempts++) {
             Object message = wire.read();
             if (message instanceof EventNotification) {
-                DEvent event = ((EventNotification)message).yi();
+                DEvent event = ((EventNotification)message).yj();
                 if (type.isInstance(event)) {
                     return type.cast(event);
                 }
@@ -1061,8 +1070,8 @@ public class TestEmulatorProtocol {
             long remaining = Math.max(1L, deadline - System.currentTimeMillis());
             Object message = wire.tryRead(remaining);
             if (message instanceof EventNotification
-                    && ((EventNotification)message).yi() instanceof SceneDeltaEvent) {
-                deltas.add((SceneDeltaEvent)((EventNotification)message).yi());
+                    && ((EventNotification)message).yj() instanceof SceneDeltaEvent) {
+                deltas.add((SceneDeltaEvent)((EventNotification)message).yj());
             }
         }
         return deltas;
@@ -1071,7 +1080,7 @@ public class TestEmulatorProtocol {
     private static <T extends DEvent> T expectEvent(
             Object value, Class<T> type, String description) {
         EventNotification notification = expect(value, EventNotification.class, description);
-        return expect(notification.yi(), type, description);
+        return expect(notification.yj(), type, description);
     }
 
     private static void check(boolean condition, String message) {
@@ -1092,9 +1101,9 @@ public class TestEmulatorProtocol {
         }
 
         void send(Message message) throws Exception {
-            output.bg(message);
+            output.bf(message);
             output.flush();
-            ByteBuffer buffer = sink.sI();
+            ByteBuffer buffer = sink.sH();
             long deadline = System.currentTimeMillis() + READ_TIMEOUT_MS;
             while (buffer.hasRemaining()) {
                 if (channel.write(buffer) == 0) {
@@ -1104,7 +1113,7 @@ public class TestEmulatorProtocol {
                     Thread.sleep(2L);
                 }
             }
-            sink.sJ();
+            sink.sI();
         }
 
         Object read() throws Exception {
@@ -1119,7 +1128,7 @@ public class TestEmulatorProtocol {
             long deadline = System.currentTimeMillis() + timeoutMs;
             do {
                 if (source.a(channel)) {
-                    return input.qf();
+                    return input.qe();
                 }
                 Thread.sleep(2L);
             } while (System.currentTimeMillis() < deadline);

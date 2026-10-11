@@ -9,13 +9,13 @@ public class DObjectManager {
 
     public void register(DObject obj) {
         if (obj != null) {
-            registry.put(obj.xK(), obj);
+            registry.put(obj.xL(), obj);
         }
     }
 
     public void registerIfAbsent(DObject obj) {
         if (obj != null) {
-            registry.putIfAbsent(obj.xK(), obj);
+            registry.putIfAbsent(obj.xL(), obj);
         }
     }
 

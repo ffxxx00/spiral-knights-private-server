@@ -21,7 +21,7 @@ public final class InstalledConfigManager extends ConfigManager {
     public <T extends ManagedConfig> int loadGroup(Class<T> type, String path) throws Exception {
         T[] configs;
         try (FileInputStream input = new FileInputStream(path)) {
-            configs = (T[])new BinaryImporter(input).qf();
+            configs = (T[])new BinaryImporter(input).qe();
         }
         ConfigGroup<T> group = new ConfigGroup<>(type);
         group.init(this);

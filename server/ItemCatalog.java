@@ -16,8 +16,8 @@ public class ItemCatalog {
 
     static {
         try {
-            // Current live client mapping: Vu() reads the per-instance id from bvP.
-            itemIdField = Item.class.getDeclaredField("bvP");
+            // Current live client mapping: VA() reads the frozen client per-instance id from bvX.
+            itemIdField = Item.class.getDeclaredField("bvX");
             itemIdField.setAccessible(true);
             levelField = LevelItem.class.getDeclaredField("_level");
             levelField.setAccessible(true);
@@ -50,37 +50,37 @@ public class ItemCatalog {
         // Slot 0: Armor
         LevelItem armor = createItem(currentId++, "Gear/Armor/Chaos Cloak", 10);
         allItems.add(armor);
-        po.equipment[0] = armor.Vu();
+        po.equipment[0] = armor.VA();
 
         // Slot 1: Helm
         LevelItem helm = createItem(currentId++, "Gear/Helm/Chaos Cowl", 10);
         allItems.add(helm);
-        po.equipment[1] = helm.Vu();
+        po.equipment[1] = helm.VA();
 
         // Slot 2: Shield
         LevelItem shield = createItem(currentId++, "Gear/Shield/Grey Owlite Shield", 10);
         allItems.add(shield);
-        po.equipment[2] = shield.Vu();
+        po.equipment[2] = shield.VA();
 
         // Slot 6: Weapon 1 (Leviathan Blade)
         LevelItem w1 = createItem(currentId++, "Weapon/Sword/Leviathan Blade", 10);
         allItems.add(w1);
-        po.equipment[6] = w1.Vu();
+        po.equipment[6] = w1.VA();
 
         // Slot 7: Weapon 2 (Combuster)
         LevelItem w2 = createItem(currentId++, "Weapon/Sword/Combuster", 10);
         allItems.add(w2);
-        po.equipment[7] = w2.Vu();
+        po.equipment[7] = w2.VA();
 
         // Slot 8: Weapon 3 (Polaris)
         LevelItem w3 = createItem(currentId++, "Weapon/Handgun/Polaris", 10);
         allItems.add(w3);
-        po.equipment[8] = w3.Vu();
+        po.equipment[8] = w3.VA();
 
         // Slot 9: Weapon 4 (Ash of Agni)
         LevelItem w4 = createItem(currentId++, "Weapon/Bomb/Ash of Agni", 10);
         allItems.add(w4);
-        po.equipment[9] = w4.Vu();
+        po.equipment[9] = w4.VA();
 
         // 2. Extra Arsenal in Bag (Swords, Handguns, Bombs, Armor):
         String[] extraArsenal = new String[]{

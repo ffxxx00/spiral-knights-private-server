@@ -101,13 +101,13 @@ public class SceneManager {
             File sceneFile = new File("scenes/1");
             if (sceneFile.exists()) {
                 BinaryImporter importer = new BinaryImporter(new FileInputStream(sceneFile));
-                this.havenSceneModel = (TudeySceneModel)importer.qf();
-                if (this.havenSceneModel.adn() instanceof TownSceneConfig) {
-                    resolvedConfig = (TownSceneConfig)this.havenSceneModel.adn();
+                this.havenSceneModel = (TudeySceneModel)importer.qe();
+                if (this.havenSceneModel.adD() instanceof TownSceneConfig) {
+                    resolvedConfig = (TownSceneConfig)this.havenSceneModel.adD();
                 }
                 System.out.println("[SceneManager] Loaded Haven map from scenes/1:"
                     + " name=" + this.havenSceneModel.name
-                    + " entries=" + this.havenSceneModel.adr().size()
+                    + " entries=" + this.havenSceneModel.adH().size()
                     + " config=" + resolvedConfig.getClass().getSimpleName());
             }
         } catch (Exception e) {
@@ -121,15 +121,15 @@ public class SceneManager {
             if (sceneFile.exists()) {
                 try (FileInputStream input = new FileInputStream(sceneFile)) {
                     BinaryImporter importer = new BinaryImporter(input);
-                    this.trainingSceneModel = (TudeySceneModel)importer.qf();
+                    this.trainingSceneModel = (TudeySceneModel)importer.qe();
                 }
-                if (this.trainingSceneModel.adn() instanceof TrainingSceneConfig) {
-                    resolvedTrainingConfig = (TrainingSceneConfig)this.trainingSceneModel.adn();
+                if (this.trainingSceneModel.adD() instanceof TrainingSceneConfig) {
+                    resolvedTrainingConfig = (TrainingSceneConfig)this.trainingSceneModel.adD();
                 }
                 System.out.println("[SceneManager] Loaded Training Hall from scenes/"
                     + TRAINING_SCENE_ID
                     + ": name=" + this.trainingSceneModel.name
-                    + " entries=" + this.trainingSceneModel.adr().size()
+                    + " entries=" + this.trainingSceneModel.adH().size()
                     + " config=" + resolvedTrainingConfig.getClass().getSimpleName());
             }
         } catch (Exception e) {
@@ -285,7 +285,7 @@ public class SceneManager {
             "character/pc/model_level.dat",
             "Colorization", Integer.valueOf(player.color),
             new Object[]{ "Height", player.height.value });
-        player.eye.updatePlayerModelArgs(modelConfig.kX());
+        player.eye.updatePlayerModelArgs(modelConfig.kW());
         for (int slot : new int[]{ 0, 1, 2 }) {
             long itemId = player.equipment[slot];
             Item equipped = findItem(player, itemId);
@@ -294,18 +294,18 @@ public class SceneManager {
             }
             ItemConfig.Original itemConfig = resolveItemConfig(equipped);
             if (itemConfig != null) {
-                itemConfig.a(player.color, modelConfig.kX());
+                itemConfig.a(player.color, modelConfig.kW());
             } else {
                 System.out.println("[SceneManager][CHARACTER][WARNING] Missing item config for "
-                    + equipped.Mt().getName());
+                    + equipped.Mv().getName());
             }
         }
         LevelItem weapon = getEquippedWeapon(player, weaponIndex);
         ItemConfig.Weapon weaponConfig = resolveWeaponConfig(weapon);
         if (weaponConfig != null) {
-            weaponConfig.a(player.color, modelConfig.kX());
+            weaponConfig.a(player.color, modelConfig.kW());
         }
-        modelConfig.kX().f("Shield Away", "True");
+        modelConfig.kW().f("Shield Away", "True");
         return modelConfig;
     }
 
@@ -328,18 +328,18 @@ public class SceneManager {
             new Vector2f(spawnX, spawnY), 0.0f);
         LevelItem weapon = getEquippedWeapon(player, 0);
         if (weapon != null) {
-            dungeoneer.c(weapon.VH());
+            dungeoneer.c(weapon.VN());
         }
         Item shield = findItem(player, player.equipment[2]);
         if (shield != null) {
-            dungeoneer.fe(shield.Mt().getName());
+            dungeoneer.fe(shield.Mv().getName());
         }
         dungeoneer.init(this.configManager);
         return dungeoneer;
     }
 
     public static int getPlayerPawnId(PlayerObject player) {
-        return player == null ? PLAYER_PAWN_ID : player.xK();
+        return player == null ? PLAYER_PAWN_ID : player.xL();
     }
 
     private static InstalledConfigManager loadInstalledConfigs() {
@@ -375,11 +375,11 @@ public class SceneManager {
     }
 
     public ItemConfig.Original resolveItemConfig(Item item) {
-        if (item == null || item.Mt() == null) {
+        if (item == null || item.Mv() == null) {
             return null;
         }
-        ItemConfig config = this.configManager.a(ItemConfig.class, item.Mt());
-        return config == null ? null : config.x(this.configManager);
+        ItemConfig config = this.configManager.a(ItemConfig.class, item.Mv());
+        return config == null ? null : config.w(this.configManager);
     }
 
     public AttackConfig.Original resolveAttack(ItemConfig.Weapon weapon, int chainIndex) {
@@ -392,7 +392,7 @@ public class SceneManager {
 
     public void equipCombatWeapon(Dungeoneer actor, PlayerObject player, int weaponIndex) {
         LevelItem weapon = getEquippedWeapon(player, weaponIndex);
-        actor.c(weapon == null ? null : weapon.VH());
+        actor.c(weapon == null ? null : weapon.VN());
         actor.setConfig(player.a(COMBAT_PLAYER_ACTOR_CONFIG,
             createPlayerModel(player, weaponIndex), new Object[0]));
         actor.init(this.configManager);
@@ -403,7 +403,7 @@ public class SceneManager {
             return null;
         }
         for (Item item : player.items) {
-            if (item != null && item.Vu() == itemId) {
+            if (item != null && item.VA() == itemId) {
                 return item;
             }
         }
@@ -423,12 +423,12 @@ public class SceneManager {
         }
         addPlayerTo(target, po);
         System.out.println("[SceneManager] Player moved to sceneId=" + sceneId
-            + " placeOid=" + target.xK() + ": " + po.knight
-            + " (bodyOid=" + po.xK() + ")");
+            + " placeOid=" + target.xL() + ": " + po.knight
+            + " (bodyOid=" + po.xL() + ")");
     }
 
     private static void addPlayerTo(ProjectXSceneObject scene, PlayerObject po) {
-        int bodyOid = po.xK();
+        int bodyOid = po.xL();
         if (!scene.occupants.aH(bodyOid)) {
             scene.occupants.aG(bodyOid);
         }
@@ -446,7 +446,7 @@ public class SceneManager {
         occ.type = PlayerObject.Type.NORMAL;
         occ.color = po.color;
         occ.guild = po.guild;
-        occ.pr = (ProjectXCodes.baU != null && !ProjectXCodes.baU.isEmpty()) ? ProjectXCodes.baU.get(0) : null;
+        occ.pr = (ProjectXCodes.baX != null && !ProjectXCodes.baX.isEmpty()) ? ProjectXCodes.baX.get(0) : null;
         occ.rank = (po.rank != null) ? po.rank.rank : 10;
 
         List<OccupantInfo> list = new ArrayList<>();
@@ -467,7 +467,7 @@ public class SceneManager {
         removePlayerFrom(this.sceneObject, po);
         removePlayerFrom(this.trainingSceneObject, po);
         System.out.println("[SceneManager] Player removed from all local scenes: bodyOid="
-            + po.xK());
+            + po.xL());
     }
 
     public synchronized OidList snapshotOccupants(int sceneId) {
@@ -488,7 +488,7 @@ public class SceneManager {
     }
 
     private static void removePlayerFrom(ProjectXSceneObject scene, PlayerObject po) {
-        int bodyOid = po.xK();
+        int bodyOid = po.xL();
         OidList occupants = new OidList();
         for (Integer existingOid : scene.occupants) {
             if (existingOid.intValue() != bodyOid) {

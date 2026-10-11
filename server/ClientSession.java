@@ -220,7 +220,7 @@ public class ClientSession implements Runnable {
                 }
                 if (!running) break;
 
-                Object msg = inStream.qf();
+                Object msg = inStream.qe();
                 if (msg == null) {
                     continue;
                 }
@@ -278,6 +278,9 @@ public class ClientSession implements Runnable {
         this.playerObject.objectives = new DSet<>();
         this.playerObject.memories = new DSet<>();
         this.playerObject.completedMissions = new DSet<>();
+        // OptionsDialog in the frozen client reads per-player preference values.
+        // An empty set lets PlayerObject apply the client's built-in defaults.
+        this.playerObject.prefs = new DSet<>();
         this.playerObject.expansions = Sets.newHashSet();
         this.playerObject.rewardIds = Sets.newHashSet();
         this.playerObject.missionTests = Sets.newHashSet();
@@ -320,11 +323,11 @@ public class ClientSession implements Runnable {
         this.partyObject.cH(this.playerObject.partyOid);
 
         PartyMarshaller partyService = new PartyMarshaller();
-        partyService.a(this.partyObject.xK(), PARTY_SERVICE_CODE, null);
+        partyService.a(this.partyObject.xL(), PARTY_SERVICE_CODE, null);
         this.partyObject.partyService = partyService;
         com.threerings.crowd.chat.data.SpeakMarshaller speakService =
             new com.threerings.crowd.chat.data.SpeakMarshaller();
-        speakService.a(this.partyObject.xK(), PARTY_SPEAK_SERVICE_CODE, null);
+        speakService.a(this.partyObject.xL(), PARTY_SPEAK_SERVICE_CODE, null);
         this.partyObject.speakService = speakService;
 
         PartyMember member = new PartyMember(
@@ -343,7 +346,7 @@ public class ClientSession implements Runnable {
         this.partyObject.hasPickups = true;
         this.dobjMgr.register(this.partyObject);
         System.out.println("[ClientSession-" + connectionId + "][PARTY] initialized"
-            + " oid=" + this.partyObject.xK()
+            + " oid=" + this.partyObject.xL()
             + " members=1 health=100 weapons=" + member.weapons.length);
     }
 
@@ -376,6 +379,7 @@ public class ClientSession implements Runnable {
             1,
             0,
             0,
+            0, // flags: this local arcade gate has no special flags
             new GateSummary.Wheel[0],
             new Theme[0]
         );
@@ -454,13 +458,13 @@ public class ClientSession implements Runnable {
     }
 
     private void writeMessageNow(Object msg) throws IOException {
-        outStream.bg(msg);
+        outStream.bf(msg);
         outStream.flush();
-        ByteBuffer buf = sink.sI();
+        ByteBuffer buf = sink.sH();
         while (buf.hasRemaining()) {
             channel.write(buf);
         }
-        sink.sJ();
+        sink.sI();
     }
 
     private void handleAuth(AuthRequest req) throws Exception {
@@ -535,7 +539,7 @@ public class ClientSession implements Runnable {
     }
 
     private void handleSubscribe(SubscribeRequest req) throws Exception {
-        int oid = req.xK();
+        int oid = req.xL();
         System.out.println("[ClientSession-" + connectionId + "][SUBSCRIBE] oid=" + oid);
 
         DObject obj = dobjMgr.get(oid);
@@ -570,17 +574,17 @@ public class ClientSession implements Runnable {
     }
 
     private void handleUnsubscribe(UnsubscribeRequest req) throws Exception {
-        int oid = req.xK();
+        int oid = req.xL();
         System.out.println("[ClientSession-" + connectionId + "] UnsubscribeRequest for OID: " + oid);
         sendMessage(new UnsubscribeResponse(oid));
     }
 
     private void handleForwardEvent(ForwardEventRequest req) throws Exception {
-        DEvent event = req.yi();
+        DEvent event = req.yj();
         if (event instanceof InvocationRequestEvent) {
             InvocationRequestEvent invReq = (InvocationRequestEvent)event;
-            int invCode = invReq.yd();
-            int methodId = invReq.yb();
+            int invCode = invReq.ye();
+            int methodId = invReq.yc();
             Object[] args = (argsField != null) ? (Object[])argsField.get(invReq) : new Object[0];
             System.out.println("[ClientSession-" + connectionId + "] InvocationRequest: code=" + invCode + ", method=" + methodId + ", args=" + Arrays.toString(args));
 
@@ -667,7 +671,7 @@ public class ClientSession implements Runnable {
             if (!this.inputStreamLogged) {
                 this.inputStreamLogged = true;
                 System.out.println("[ClientSession-" + connectionId + "][TUDEY] player input stream active"
-                    + " sceneOid=" + event.xG()
+                    + " sceneOid=" + event.xH()
                     + " acknowledgedSceneTimestamp=" + input.acknowledge
                     + " smoothedTime=" + input.smoothedTime
                     + " frames=" + (input.frames == null ? 0 : input.frames.length));
@@ -675,7 +679,7 @@ public class ClientSession implements Runnable {
             processInput(input);
         } else {
             System.out.println("[ClientSession-" + connectionId + "] ForwardEvent: " + event);
-            if (event != null && playerObject != null && event.xG() == playerObject.xK()) {
+            if (event != null && playerObject != null && event.xH() == playerObject.xL()) {
                 try {
                     applyClientObjectEvent(event);
                     System.out.println("[ClientSession-" + connectionId + "][CLIENT_OBJECT] applied event="
@@ -690,7 +694,7 @@ public class ClientSession implements Runnable {
     private void applyClientObjectEvent(DEvent event) {
         playerObject.e(event);
         if (event instanceof CompoundEvent) {
-            for (DEvent child : ((CompoundEvent)event).xD()) {
+            for (DEvent child : ((CompoundEvent)event).xE()) {
                 applySingleClientObjectEvent(child);
             }
         } else {
@@ -764,8 +768,8 @@ public class ClientSession implements Runnable {
         resetCombatState();
         this.sceneNetwork.join(this.currentSceneId, this);
         Map<Integer, Knight> actors = this.sceneNetwork.snapshotActors(this.currentSceneId);
-        if (!actors.containsKey(playerActor.vx())) {
-            actors.put(playerActor.vx(), (Knight)playerActor.copy(null));
+        if (!actors.containsKey(playerActor.vw())) {
+            actors.put(playerActor.vw(), (Knight)playerActor.copy(null));
         }
         Actor[] addedActors = actors.values().toArray(new Actor[actors.size()]);
         SceneDeltaEvent initialState = new SceneDeltaEvent(
@@ -791,18 +795,18 @@ public class ClientSession implements Runnable {
         sendMessage(new EventNotification(initialState));
         this.sceneReady = true;
         this.sceneNetwork.broadcastOccupants(this.currentSceneId);
-        Object composedModel = playerActor.Mt().kX().get("Model");
+        Object composedModel = playerActor.Mv().kW().get("Model");
         System.out.println("[ClientSession-" + connectionId + "][TUDEY] initial scene state sent"
             + " targetOid=" + this.clientOid
             + " sceneId=" + this.currentSceneId
             + " sceneOid=" + this.currentPlaceOid
             + " reference=" + reference
             + " timestamp=" + timestamp
-            + " actors=" + addedActors.length + " pawnId=" + playerActor.vx()
+            + " actors=" + addedActors.length + " pawnId=" + playerActor.vw()
             + " actorType=" + playerActor.getClass().getSimpleName()
-            + " actorConfig=" + playerActor.Mt().getName()
+            + " actorConfig=" + playerActor.Mv().getName()
             + " model=" + composedModel
-            + " activity=" + playerActor.adE()
+            + " activity=" + playerActor.adU()
             + " spawn=(" + this.currentSpawnX + "," + this.currentSpawnY + ")"
             + "; client preload may begin");
     }
@@ -826,7 +830,7 @@ public class ClientSession implements Runnable {
         Arrays.sort(orderedFrames, (left, right) -> {
             if (left == null) return right == null ? 0 : -1;
             if (right == null) return 1;
-            return Integer.compare(left.QU(), right.QU());
+            return Integer.compare(left.QY(), right.QY());
         });
         int firstFrameIndex = Math.max(
             0, orderedFrames.length - this.movementConfig.maxFramesPerPacket);
@@ -837,8 +841,8 @@ public class ClientSession implements Runnable {
                 + " received=" + frames.length + " acceptedLimit=" + frameCount);
         }
 
-        float packetBeforeX = this.authoritativeActor.tA().x;
-        float packetBeforeY = this.authoritativeActor.tA().y;
+        float packetBeforeX = this.authoritativeActor.tz().x;
+        float packetBeforeY = this.authoritativeActor.tz().y;
         int accepted = 0;
         int latestAcceptedTimestamp = this.lastInputTimestamp;
         int latestInputFlags = 0;
@@ -849,10 +853,10 @@ public class ClientSession implements Runnable {
 
         for (int index = firstFrameIndex; index < orderedFrames.length; index++) {
             InputFrame frame = orderedFrames[index];
-            if (frame != null && Float.isFinite(frame.tB()) && Float.isFinite(frame.adj())
+            if (frame != null && Float.isFinite(frame.tA()) && Float.isFinite(frame.adz())
                     && (this.lastInputTimestamp == Integer.MIN_VALUE
-                        || frame.QU() > this.lastInputTimestamp)) {
-                newestPacketInputTimestamp = Math.max(newestPacketInputTimestamp, frame.QU());
+                        || frame.QY() > this.lastInputTimestamp)) {
+                newestPacketInputTimestamp = Math.max(newestPacketInputTimestamp, frame.QY());
             }
         }
 
@@ -866,12 +870,12 @@ public class ClientSession implements Runnable {
 
         for (int index = firstFrameIndex; index < orderedFrames.length; index++) {
             InputFrame frame = orderedFrames[index];
-            if (frame == null || !Float.isFinite(frame.tB()) || !Float.isFinite(frame.adj())) {
+            if (frame == null || !Float.isFinite(frame.tA()) || !Float.isFinite(frame.adz())) {
                 this.rejectedInputFrames++;
                 continue;
             }
 
-            int frameTimestamp = frame.QU();
+            int frameTimestamp = frame.QY();
             if (this.lastInputTimestamp != Integer.MIN_VALUE
                     && frameTimestamp <= this.lastInputTimestamp) {
                 this.staleInputFrames++;
@@ -904,12 +908,12 @@ public class ClientSession implements Runnable {
                     Math.min((long)targetSceneTimestamp, translated));
             }
 
-            this.authoritativeActor.ah(frame.tB());
-            this.authoritativeActor.aO(frame.adj());
-            if (this.authoritativeActor.adE() == 1) {
+            this.authoritativeActor.ah(frame.tA());
+            this.authoritativeActor.aP(frame.adz());
+            if (this.authoritativeActor.adU() == 1) {
                 // Activity 1 is the creation animation. The normal state is
                 // activity 0; idle/walk selection then follows actor flag 2.
-                this.authoritativeActor.aT(0, frameSceneTimestamp);
+                this.authoritativeActor.aU(0, frameSceneTimestamp);
             }
             if (this.currentSceneId == SceneManager.TRAINING_SCENE_ID
                     && this.authoritativeActor instanceof Dungeoneer
@@ -921,15 +925,15 @@ public class ClientSession implements Runnable {
             this.authoritativeActor.k(2, moving);
             if (moving && elapsedMs > 0) {
                 float distance = this.movementConfig.effectiveSpeed() * elapsedMs / 1000.0f;
-                float x = this.authoritativeActor.tA().x
-                    + distance * (float)Math.cos(frame.adj());
-                float y = this.authoritativeActor.tA().y
-                    + distance * (float)Math.sin(frame.adj());
+                float x = this.authoritativeActor.tz().x
+                    + distance * (float)Math.cos(frame.adz());
+                float y = this.authoritativeActor.tz().y
+                    + distance * (float)Math.sin(frame.adz());
                 if (this.movementConfig.clampToMapBounds) {
                     x = clamp(x, this.movementConfig.minX, this.movementConfig.maxX);
                     y = clamp(y, this.movementConfig.minY, this.movementConfig.maxY);
                 }
-                this.authoritativeActor.tA().s(x, y);
+                this.authoritativeActor.tz().s(x, y);
                 this.authoritativeActor.setDirty(true);
             }
 
@@ -970,11 +974,11 @@ public class ClientSession implements Runnable {
                 + " action=" + ((latestInputFlags & 4) != 0)
                 + " weapon=" + (this.currentSceneId == SceneManager.TRAINING_SCENE_ID
                     ? this.activeWeaponIndex + 1 : 0)
-                + " activity=" + this.authoritativeActor.adE()
-                + " position=(" + this.authoritativeActor.tA().x
-                + "," + this.authoritativeActor.tA().y + ")"
-                + " rotation=" + this.authoritativeActor.tB()
-                + " direction=" + this.authoritativeActor.adj());
+                + " activity=" + this.authoritativeActor.adU()
+                + " position=(" + this.authoritativeActor.tz().x
+                + "," + this.authoritativeActor.tz().y + ")"
+                + " rotation=" + this.authoritativeActor.tA()
+                + " direction=" + this.authoritativeActor.adz());
         }
     }
 
@@ -982,7 +986,7 @@ public class ClientSession implements Runnable {
         Dungeoneer actor = (Dungeoneer)this.authoritativeActor;
         finishExpiredCombatActivity(actor, timestamp);
 
-        int requestedWeapon = frame.Qr();
+        int requestedWeapon = frame.Qv();
         if (requestedWeapon >= 0 && requestedWeapon < this.playerObject.weaponSlots
                 && requestedWeapon != this.activeWeaponIndex) {
             this.activeWeaponIndex = requestedWeapon;
@@ -993,7 +997,7 @@ public class ClientSession implements Runnable {
             this.attackPressedAt = Integer.MIN_VALUE;
             this.charging = false;
             this.sceneMgr.equipCombatWeapon(actor, this.playerObject, requestedWeapon);
-            actor.aT(0, timestamp);
+            actor.aU(0, timestamp);
             logCombat("weapon", timestamp, "slot=" + (requestedWeapon + 1)
                 + " item=" + currentWeaponName(actor));
         }
@@ -1002,7 +1006,7 @@ public class ClientSession implements Runnable {
         boolean shieldBash = frame.bR(2048);
         boolean defend = frame.bR(64);
         boolean attack = frame.bR(4);
-        int actionChanged = frame.Ne();
+        int actionChanged = frame.Nh();
         boolean actionChangedNow = actionChanged != this.lastActionChanged;
 
         if (dodge && !this.dodgeHeld && timestamp >= this.nextDodgeAt) {
@@ -1011,15 +1015,15 @@ public class ClientSession implements Runnable {
             logCombat("dodge", timestamp, "cooldownUntil=" + this.nextDodgeAt);
         } else if (shieldBash && !this.shieldBashHeld) {
             startFixedActivity(actor, 287, timestamp, 700);
-            logCombat("shield_bash", timestamp, "shield=" + actor.Rg());
-        } else if (defend && !isAttackActivity(actor.adE())) {
-            if (!this.defendHeld || actor.adE() != 284) {
-                actor.aT(284, timestamp);
+            logCombat("shield_bash", timestamp, "shield=" + actor.Rk());
+        } else if (defend && !isAttackActivity(actor.adU())) {
+            if (!this.defendHeld || actor.adU() != 284) {
+                actor.aU(284, timestamp);
                 this.attackActivityEndsAt = Integer.MAX_VALUE;
                 logCombat("defend", timestamp, "state=raised");
             }
-        } else if (!defend && this.defendHeld && actor.adE() == 284) {
-            actor.aT(0, timestamp);
+        } else if (!defend && this.defendHeld && actor.adU() == 284) {
+            actor.aU(0, timestamp);
             this.attackActivityEndsAt = Integer.MIN_VALUE;
             logCombat("defend", timestamp, "state=lowered");
         }
@@ -1034,7 +1038,7 @@ public class ClientSession implements Runnable {
                     && timestamp - this.attackPressedAt >= 350
                     && timestamp >= this.nextAttackAt) {
                 this.charging = true;
-                actor.aT(283, timestamp);
+                actor.aU(283, timestamp);
                 this.attackActivityEndsAt = Integer.MAX_VALUE;
                 logCombat("charge", timestamp, "state=charging item=" + currentWeaponName(actor));
             }
@@ -1050,12 +1054,12 @@ public class ClientSession implements Runnable {
     }
 
     private void startPrimaryAttack(Dungeoneer actor, int timestamp) {
-        ItemConfig.Weapon weapon = actor.Rf();
+        ItemConfig.Weapon weapon = actor.Rj();
         int attackCount = weapon == null || weapon.attacks == null ? 0 : weapon.attacks.length;
         if (attackCount == 0) {
             this.charging = true;
             this.attackPressedAt = timestamp;
-            actor.aT(283, timestamp);
+            actor.aU(283, timestamp);
             this.attackActivityEndsAt = Integer.MAX_VALUE;
             logCombat("charge", timestamp, "state=charging item=" + currentWeaponName(actor));
             return;
@@ -1065,15 +1069,15 @@ public class ClientSession implements Runnable {
         }
         int chain = this.attackChainIndex % Math.min(attackCount, 8);
         AttackConfig.Original attack = this.sceneMgr.resolveAttack(weapon, chain);
-        int rearm = attack == null ? 350 : Math.max(100, attack.Qc());
-        int duration = attack == null ? 750 : Math.max(rearm, attack.Qb());
-        actor.aT(292 + chain, timestamp);
+        int rearm = attack == null ? 350 : Math.max(100, attack.Qg());
+        int duration = attack == null ? 750 : Math.max(rearm, attack.Qf());
+        actor.aU(292 + chain, timestamp);
         this.attackActivityEndsAt = timestamp + duration;
         this.nextAttackAt = timestamp + rearm;
         this.chainResetsAt = this.attackActivityEndsAt
             + (weapon == null ? 0 : weapon.chainCooldown);
         this.attackChainIndex = (chain + 1) % attackCount;
-        actor.av(this.attackChainIndex, this.chainResetsAt);
+        actor.aw(this.attackChainIndex, this.chainResetsAt);
         logCombat("attack", timestamp,
             "activity=" + (292 + chain)
             + " chain=" + (chain + 1) + "/" + attackCount
@@ -1082,23 +1086,23 @@ public class ClientSession implements Runnable {
     }
 
     private void finishChargedAttack(Dungeoneer actor, int timestamp) {
-        ItemConfig.Weapon weapon = actor.Rf();
+        ItemConfig.Weapon weapon = actor.Rj();
         int heldFor = Math.max(0, timestamp - this.attackPressedAt);
         boolean complete = weapon != null && heldFor >= weapon.chargeTime;
-        actor.aT(complete ? 290 : 289, timestamp);
+        actor.aU(complete ? 290 : 289, timestamp);
         this.charging = false;
         this.attackActivityEndsAt = timestamp + 900;
         this.nextAttackAt = this.attackActivityEndsAt;
         this.attackChainIndex = 0;
         logCombat("charge", timestamp,
             "state=" + (complete ? "released" : "incomplete")
-            + " held=" + heldFor + "ms activity=" + actor.adE()
+            + " held=" + heldFor + "ms activity=" + actor.adU()
             + " item=" + currentWeaponName(actor));
     }
 
     private void startFixedActivity(
             Dungeoneer actor, int activity, int timestamp, int duration) {
-        actor.aT(activity, timestamp);
+        actor.aU(activity, timestamp);
         this.attackActivityEndsAt = timestamp + duration;
         this.nextAttackAt = this.attackActivityEndsAt;
         this.charging = false;
@@ -1108,9 +1112,9 @@ public class ClientSession implements Runnable {
         if (this.attackActivityEndsAt != Integer.MIN_VALUE
                 && this.attackActivityEndsAt != Integer.MAX_VALUE
                 && timestamp >= this.attackActivityEndsAt
-                && (isAttackActivity(actor.adE()) || actor.adE() == 286
-                    || actor.adE() == 287)) {
-            actor.aT(this.defendHeld ? 284 : 0, this.attackActivityEndsAt);
+                && (isAttackActivity(actor.adU()) || actor.adU() == 286
+                    || actor.adU() == 287)) {
+            actor.aU(this.defendHeld ? 284 : 0, this.attackActivityEndsAt);
             this.attackActivityEndsAt = this.defendHeld
                 ? Integer.MAX_VALUE : Integer.MIN_VALUE;
         }
@@ -1122,15 +1126,15 @@ public class ClientSession implements Runnable {
     }
 
     private static boolean supportsCharge(Dungeoneer actor) {
-        ItemConfig.Weapon weapon = actor.Rf();
+        ItemConfig.Weapon weapon = actor.Rj();
         return weapon != null && weapon.chargedAttack != null
             && weapon.incompleteChargedAttack != null;
     }
 
     private static String currentWeaponName(Dungeoneer actor) {
-        LevelItem weapon = actor.Re();
-        return weapon == null || weapon.Mt() == null
-            ? "none" : weapon.Mt().getName();
+        LevelItem weapon = actor.Ri();
+        return weapon == null || weapon.Mv() == null
+            ? "none" : weapon.Mv().getName();
     }
 
     private void logDeliveredCombatState(
@@ -1144,14 +1148,14 @@ public class ClientSession implements Runnable {
         Dungeoneer newActor = (Dungeoneer)this.authoritativeActor;
         String oldWeapon = currentWeaponName(oldActor);
         String newWeapon = currentWeaponName(newActor);
-        if (oldActor.adE() == newActor.adE() && Objects.equals(oldWeapon, newWeapon)) {
+        if (oldActor.adU() == newActor.adU() && Objects.equals(oldWeapon, newWeapon)) {
             return;
         }
         System.out.println("[ClientSession-" + connectionId + "][COMBAT] delta delivered"
             + " reference=" + reference
             + " timestamp=" + timestamp
             + " acknowledge=" + acknowledgedInputTimestamp
-            + " activity=" + newActor.adE()
+            + " activity=" + newActor.adU()
             + " weapon=" + newWeapon
             + " batchedInputPackets=" + batchedInputPackets);
     }
@@ -1306,7 +1310,7 @@ public class ClientSession implements Runnable {
         this.previousAckLagMs = ackLagMs;
 
         Knight previousOwnActor = this.authoritativeActor == null
-            ? null : this.lastSentActors.get(this.authoritativeActor.vx());
+            ? null : this.lastSentActors.get(this.authoritativeActor.vw());
         if (deliverActorState && previousOwnActor != null) {
             logDeliveredCombatState(
                 previousOwnActor, reference, acknowledgedInputTimestamp,
@@ -1358,10 +1362,10 @@ public class ClientSession implements Runnable {
             Knight current = entry.getValue();
             if (previous == null
                     || previous.getClass() != current.getClass()
-                    || previous.adE() != current.adE()
-                    || previous.adF() != current.adF()
+                    || previous.adU() != current.adU()
+                    || previous.adV() != current.adV()
                     || previous.bR(2) != current.bR(2)
-                    || !Objects.equals(previous.Mt(), current.Mt())) {
+                    || !Objects.equals(previous.Mv(), current.Mv())) {
                 return true;
             }
             if (previous instanceof Dungeoneer && current instanceof Dungeoneer
@@ -1388,17 +1392,17 @@ public class ClientSession implements Runnable {
             Knight adjusted = (Knight)current.copy(null);
             Knight previous = this.lastSentActors.get(entry.getKey());
 
-            if (adjusted.adF() > deliveryTimestamp) {
+            if (adjusted.adV() > deliveryTimestamp) {
                 int activityStarted = deliveryTimestamp;
-                if (previous != null && previous.adE() == adjusted.adE()) {
-                    activityStarted = Math.min(previous.adF(), deliveryTimestamp);
+                if (previous != null && previous.adU() == adjusted.adU()) {
+                    activityStarted = Math.min(previous.adV(), deliveryTimestamp);
                 }
-                adjusted.aT(adjusted.adE(), activityStarted);
+                adjusted.aU(adjusted.adU(), activityStarted);
             }
-            if (actorCreatedField != null && adjusted.adI() > deliveryTimestamp) {
+            if (actorCreatedField != null && adjusted.adX() > deliveryTimestamp) {
                 try {
                     int created = previous == null
-                        ? deliveryTimestamp : Math.min(previous.adI(), deliveryTimestamp);
+                        ? deliveryTimestamp : Math.min(previous.adX(), deliveryTimestamp);
                     actorCreatedField.setInt(adjusted, created);
                 } catch (IllegalAccessException error) {
                     throw new IllegalStateException(
@@ -1432,8 +1436,8 @@ public class ClientSession implements Runnable {
             this.currentSceneId,
             previousX,
             previousY,
-            this.authoritativeActor.tA().x,
-            this.authoritativeActor.tA().y);
+            this.authoritativeActor.tz().x,
+            this.authoritativeActor.tz().y);
         if (destination == -1) {
             return;
         }
@@ -1448,8 +1452,8 @@ public class ClientSession implements Runnable {
         System.out.println("[ClientSession-" + connectionId + "][PORTAL] trigger"
             + " fromScene=" + this.currentSceneId
             + " toScene=" + destination
-            + " position=(" + this.authoritativeActor.tA().x
-            + "," + this.authoritativeActor.tA().y + ")"
+            + " position=(" + this.authoritativeActor.tz().x
+            + "," + this.authoritativeActor.tz().y + ")"
             + " receiverId=" + zoneReceiverId);
     }
 
@@ -1607,9 +1611,9 @@ public class ClientSession implements Runnable {
     }
 
     private void handlePing(PingRequest req) throws Exception {
-        // yi() is the sender-side write stamp and is transient. On the receiving
-        // side readObject stores the usable timestamp in yj().
-        PongResponse pong = new PongResponse(req.yk(), req.xJ());
+        // The sender's pack stamp is transient. The frozen client's readObject
+        // records the server receive time in ym(), used to measure process delay.
+        PongResponse pong = new PongResponse(req.ym(), req.xK());
         sendMessage(pong);
     }
 
@@ -1621,10 +1625,10 @@ public class ClientSession implements Runnable {
             sceneMgr.removePlayer(playerObject);
             this.sceneNetwork.broadcastOccupants(this.currentSceneId);
             if (playerObject != null) {
-                dobjMgr.unregister(playerObject.xK());
+                dobjMgr.unregister(playerObject.xL());
             }
             if (partyObject != null) {
-                dobjMgr.unregister(partyObject.xK());
+                dobjMgr.unregister(partyObject.xL());
             }
             if (this.onClosed != null) {
                 this.onClosed.accept(this);
